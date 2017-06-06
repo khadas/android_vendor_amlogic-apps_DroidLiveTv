@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<resources>
+    <color name="transparent">#00000000</color>
+    <!-- Side panel -->
+    <color name="side_panel_background">#263238</color>
+    <color name="side_panel_header_background">#0277BD</color>
+    <color name="option_item_text_color">#FFEEEEEE</color>
+    <color name="option_item_secondary_text_color">#4DEEEEEE</color>
+ 
+</resources>

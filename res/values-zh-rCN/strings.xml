@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">DroidLiveTv</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+
+    <!-- pictrue mode -->
+    <string name="picture">图像</string>
+    <string name="picture_mode">图像模式</string>
+    <string name="standard">标准</string>
+    <string name="vivid">明亮</string>
+    <string name="soft">柔和</string>
+    <string name="user">用户</string>
+    <!-- sound mode -->
+    <string name="sound">声音</string>
+    <string name="sound_mode">声音模式</string>
+    <string name="music">音乐</string>
+    <string name="news">新闻</string>
+    <string name="movie">电影</string>
+    <!-- ratio mode -->
+    <string name="aspect_ratio">显示比例</string>
+    <string name="auto">自动</string>
+    <string name="panorama">全景</string>
+    <string name="full_screen">全屏</string>
+    <!-- fav & list-->
+    <string name="tv">电视</string>
+    <string name="radio">广播</string>
+    <string name="favourite_list">喜爱列表</string>
+    <string name="channel_list">频道列表</string>
+    <!-- sleep mode -->
+    <string name="sleep_timer">睡眠定时</string>
+    <string name="time_15min">15分钟</string>
+    <string name="time_30min">30分钟</string>
+    <string name="time_45min">45分钟</string>
+    <string name="time_60min">60分钟</string>
+    <string name="time_90min">90分钟</string>
+    <string name="time_120min">120分钟</string>
+    <string name="on">开</string>
+    <string name="off">关</string>
+    <!-- for time suspend ui -->
+    <string name="suspend_dialog_title">待机倒计时</string>
+    <string name="cancel_suspend">取消倒计时</string>
+    <string name="countdown_tips">秒后将关机</string>
+    
+</resources>
