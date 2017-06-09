@@ -79,6 +79,7 @@ public class MultiOptionFragment extends SideFragment {
         this.mDeviceId = bundle.getInt("deviceid");
         this.mContext = context;
         this.mSetParameters = new SetParameters(context, bundle);
+        Log.d(TAG, "mKeyValue: " + mKeyValue + ", mDeviceId: " + mDeviceId);
     }
 
     @Override
@@ -219,6 +220,7 @@ public class MultiOptionFragment extends SideFragment {
     }
 
     private void setParameter(int keyvalue, int mode) {
+        Log.d(TAG, "[setParameter] keyvalue: " + keyvalue + ", mode: " + mode);
         switch (keyvalue) {
             case DroidLogicKeyEvent.KEYCODE_TV_SHORTCUTKEY_VIEWMODE: {
                 mSetParameters.setPictureMode(mode);
@@ -259,6 +261,7 @@ public class MultiOptionFragment extends SideFragment {
                 break;
             }
         }
+        Log.d(TAG, "[getParameter] keyvalue: " + keyvalue + ", value: " + value);
         return value;
     }
 

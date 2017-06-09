@@ -26,18 +26,21 @@ public class DroidLiveTvActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mContext = this;
-        requestWindowFeature(Window.FEATURE_NO_TITLE); 
-        setContentView(R.layout.activity_droid_live_tv);
-        mOverlayRootView = (OverlayRootView) getLayoutInflater().inflate(R.layout.overlay_root_view, null, false);
-        mSideFragmentManager = new SideFragmentManager(this);
-        Display display = getWindowManager().getDefaultDisplay(); 
-        Intent intent = getIntent(); 
+        Intent intent = getIntent();
         Bundle bundle= intent.getExtras();
         if (bundle != null) {
+            requestWindowFeature(Window.FEATURE_NO_TITLE);
+            setContentView(R.layout.activity_droid_live_tv);
+            mOverlayRootView = (OverlayRootView) getLayoutInflater().inflate(R.layout.overlay_root_view, null, false);
+            mSideFragmentManager = new SideFragmentManager(this);
+            Display display = getWindowManager().getDefaultDisplay();
+
             int keyvalue = bundle.getInt("eventkey");
             int deviceid = bundle.getInt("deviceid");
             Log.d(TAG, "GETKEY: " + keyvalue);
             mSideFragmentManager.show(new MultiOptionFragment(bundle, mContext));
+        } else {
+            finish();
         }
     }
 
