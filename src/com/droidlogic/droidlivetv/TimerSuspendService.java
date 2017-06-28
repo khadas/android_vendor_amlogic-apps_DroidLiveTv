@@ -25,8 +25,8 @@ import com.droidlogic.app.tv.DroidLogicTvUtils;
 import com.droidlogic.app.DroidLogicKeyEvent;
 
 
-public class TimeSuspendService extends Service {
-    private final String TAG = "TimeSuspendService";
+public class TimerSuspendService extends Service {
+    private final String TAG = "TimerSuspendService";
 
     /* time suspend dialog */
     private AlertDialog mDialog;//use to dismiss
@@ -83,10 +83,6 @@ public class TimeSuspendService extends Service {
         @Override
         public void run() {
             try {
-                if (mSuspendCount > 60)
-                    mSuspendCount = 60;
-                else
-                    mSuspendCount--;
                 if (mSuspendCount == 0) {
                     long now = SystemClock.uptimeMillis();
                     KeyEvent down = new KeyEvent(now, now, KeyEvent.ACTION_DOWN, DroidLogicKeyEvent.KEYCODE_POWER, 0);
@@ -104,22 +100,19 @@ public class TimeSuspendService extends Service {
                         String str = mSuspendCount + " " + getResources().getString(R.string.countdown_tips);
                         mCountDownText.setText(str);
                     }
+                    Log.d(TAG, "mSuspendCount=" + mSuspendCount);
                     timeSuspend_handler.postDelayed(timeSuspend_runnable, 1000);
                 }
+                mSuspendCount--;
             } catch (RuntimeException e) {
                 e.printStackTrace();
             }
-
         }
     };
 
     private void reset_shutdown_time() {
-        int sleepTime = SystemProperties.getInt("tv.sleep_timer", 0);
-        mSuspendCount = sleepTime * 60;
-        if (mSuspendCount > 60) {
-            timeSuspend_handler.removeCallbacks(timeSuspend_runnable);
-            timeSuspend_handler.postDelayed(timeSuspend_runnable, (mSuspendCount - 60) * 1000);
-        }
+        mSuspendCount =  60;
+        timeSuspend_handler.post(timeSuspend_runnable);
     }
 
     private void remove_shutdown_time() {
@@ -128,9 +121,6 @@ public class TimeSuspendService extends Service {
             mDialog.dismiss();
             mDialog = null;
         }
-        SystemProperties.set("tv.sleep_timer", "0");
         timeSuspend_handler.removeCallbacks(timeSuspend_runnable);
     }
-
-
 }
