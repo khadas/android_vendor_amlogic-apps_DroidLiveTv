@@ -58,7 +58,7 @@ public class MultiOptionFragment extends SideFragment {
         DroidLogicKeyEvent.KEYCODE_LIST, DroidLogicKeyEvent.KEYCODE_TV_SLEEP};
     private final static int[] PICTRUEMODE = {R.string.picture_mode, R.string.standard, R.string.vivid, R.string.soft, R.string.user};
     private final static int[] SOUNDMODE = {R.string.sound_mode, R.string.standard, R.string.music, R.string.news, R.string.movie, R.string.user};
-    private final static int[] RATIOMODE = {R.string.aspect_ratio, R.string.full_screen,  R.string.four2three, R.string.panorama, R.string.auto};
+    private final static int[] RATIOMODE = {R.string.aspect_ratio, R.string.auto, R.string.four2three, R.string.panorama, R.string.full_screen,};
     private final static int[] FAV = {R.string.favourite_list, R.string.tv, R.string.radio};
     private final static int[] LIST = {R.string.channel_list, R.string.tv, R.string.radio};
     private final static int[] SLEEPMODE = {R.string.sleep_timer, R.string.off, R.string.time_15min, R.string.time_30min, R.string.time_45min, R.string.time_60min,
@@ -69,6 +69,7 @@ public class MultiOptionFragment extends SideFragment {
     private boolean isListShow = false;
     private Bundle mBundle;
     private int mDeviceId;
+    private long mChannelId;
     private Context mContext;
     private SetParameters mSetParameters;
 
@@ -77,9 +78,10 @@ public class MultiOptionFragment extends SideFragment {
         this.mKeyValue = bundle.getInt("eventkey");
         this.mBundle = bundle;
         this.mDeviceId = bundle.getInt("deviceid");
+        this.mChannelId = bundle.getLong("channelid");
         this.mContext = context;
         this.mSetParameters = new SetParameters(context, bundle);
-        Log.d(TAG, "mKeyValue: " + mKeyValue + ", mDeviceId: " + mDeviceId);
+        Log.d(TAG, "mKeyValue: " + mKeyValue + ", mDeviceId: " + mDeviceId + ", mChannelId: " + mChannelId);
     }
 
     @Override

@@ -8,12 +8,14 @@ import android.content.res.Resources;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
+import android.media.tv.TvContract;
 
 import com.droidlogic.app.tv.TvControlManager;
 import com.droidlogic.app.SystemControlManager;
 import com.droidlogic.app.tv.TvDataBaseManager;
 import com.droidlogic.app.tv.DroidLogicTvUtils;
 import com.droidlogic.app.tv.TVInSignalInfo;
+import com.droidlogic.app.tv.ChannelInfo;
 
 public class SetParameters {
     private final static String TAG = "SetParameters";
@@ -21,6 +23,8 @@ public class SetParameters {
     private TvDataBaseManager mTvDataBaseManager;
     private SystemControlManager mSystemControlManager;
     private TvControlManager.SourceInput mTvSourceInput;
+    private TvControlManager.SourceInput_Type mVirtualTvSource;
+    private TvControlManager.SourceInput_Type mTvSource;
     private Resources mResources;
     private Context mContext;
     private Bundle mBundle;
@@ -34,7 +38,28 @@ public class SetParameters {
         mSystemControlManager = new SystemControlManager(mContext);
         mTvControlManager = TvControlManager.getInstance();
         mResources = mContext.getResources();
+        setCurrentChannelData(bundle);
+    }
+
+    private void setCurrentChannelData(Bundle bundle) {
+        ChannelInfo currentChannel;
+
+        mTvSource = DroidLogicTvUtils.parseTvSourceTypeFromDeviceId(mDeviceId);
         mTvSourceInput = DroidLogicTvUtils.parseTvSourceInputFromDeviceId(mDeviceId);
+        mVirtualTvSource = mTvSource;
+
+        if (mTvSource == TvControlManager.SourceInput_Type.SOURCE_TYPE_ADTV) {
+            long channelId = bundle.getLong("channelid", -1);
+            currentChannel = mTvDataBaseManager.getChannelInfo(TvContract.buildChannelUri(channelId));
+            if (currentChannel != null) {
+                mTvSource = DroidLogicTvUtils.parseTvSourceTypeFromSigType(DroidLogicTvUtils.getSigType(currentChannel));
+                mTvSourceInput = DroidLogicTvUtils.parseTvSourceInputFromSigType(DroidLogicTvUtils.getSigType(currentChannel));
+            }
+            if (mVirtualTvSource == mTvSource) {//no channels in adtv input, DTV for default.
+                mTvSource = TvControlManager.SourceInput_Type.SOURCE_TYPE_DTV;
+                mTvSourceInput = TvControlManager.SourceInput.DTV;
+            }
+        }
     }
 
     public  int getPictureModeStatus () {
@@ -85,20 +110,20 @@ public class SetParameters {
     public int getAspectRatioStatus () {
         int itemPosition = mTvControlManager.GetDisplayMode(mTvSourceInput);
         Log.d(TAG, "getAspectRatioStatus:" + itemPosition);
-        if (itemPosition == TvControlManager.Display_Mode.DISPLAY_MODE_169.toInt())
-            return 0;
-        else if (itemPosition == TvControlManager.Display_Mode.DISPLAY_MODE_MODE43.toInt())
+        if (itemPosition == TvControlManager.Display_Mode.DISPLAY_MODE_MODE43.toInt())
             return 1;
         else if (itemPosition == TvControlManager.Display_Mode.DISPLAY_MODE_FULL.toInt())
             return 2;
-        else
+        else if (itemPosition == TvControlManager.Display_Mode.DISPLAY_MODE_169.toInt())
             return 3;
+        else
+            return 0;
     }
 
     public void setAspectRatio(int mode) {
         Log.d(TAG, "setAspectRatio:" + mode);
         if (mode == 0) {
-            mTvControlManager.SetDisplayMode(TvControlManager.Display_Mode.DISPLAY_MODE_169,
+            mTvControlManager.SetDisplayMode(TvControlManager.Display_Mode.DISPLAY_MODE_NORMAL,
                     mTvSourceInput, TVInSignalInfo.SignalFmt.TVIN_SIG_FMT_NULL/*mTvControlManager.GetCurrentSignalInfo().sigFmt*/, 1);
         } else if (mode == 1) {
             mTvControlManager.SetDisplayMode(TvControlManager.Display_Mode.DISPLAY_MODE_MODE43,
@@ -107,7 +132,7 @@ public class SetParameters {
             mTvControlManager.SetDisplayMode(TvControlManager.Display_Mode.DISPLAY_MODE_FULL,
                     mTvSourceInput, TVInSignalInfo.SignalFmt.TVIN_SIG_FMT_NULL/*mTvControlManager.GetCurrentSignalInfo().sigFmt*/, 1);
         } else if (mode == 3) {
-            mTvControlManager.SetDisplayMode(TvControlManager.Display_Mode.DISPLAY_MODE_NORMAL,
+            mTvControlManager.SetDisplayMode(TvControlManager.Display_Mode.DISPLAY_MODE_169,
                     mTvSourceInput, TVInSignalInfo.SignalFmt.TVIN_SIG_FMT_NULL/*mTvControlManager.GetCurrentSignalInfo().sigFmt*/, 1);
         }
     }
