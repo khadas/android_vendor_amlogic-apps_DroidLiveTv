@@ -15,12 +15,17 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.os.Handler;
+import android.os.Message;
+import android.provider.Settings;
 
 public class DroidLiveTvActivity extends Activity {
     private final static String TAG = "DroidLiveTvActivity";
     private SideFragmentManager mSideFragmentManager;
     private OverlayRootView mOverlayRootView;
     private Context mContext;
+    private static final String KEY_MENU_TIME = "menu_time";
+    private static final int DEFUALT_MENU_TIME = 10;
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,6 +44,7 @@ public class DroidLiveTvActivity extends Activity {
             int deviceid = bundle.getInt("deviceid");
             Log.d(TAG, "GETKEY: " + keyvalue);
             mSideFragmentManager.show(new MultiOptionFragment(bundle, mContext));
+            startShowActivityTimer();
         } else {
             finish();
         }
@@ -47,16 +53,36 @@ public class DroidLiveTvActivity extends Activity {
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         Log.d(TAG, "onKeyDown(" + keyCode + ", " + event + ")");
+        startShowActivityTimer();
         switch (keyCode) {
             case KeyEvent.KEYCODE_BACK:
                 //mSideFragmentManager.popSideFragment();
                 finish();
                 return true;
+            case KeyEvent.KEYCODE_DPAD_UP:
+            case KeyEvent.KEYCODE_DPAD_DOWN:
+            case KeyEvent.KEYCODE_ENTER:
+            case KeyEvent.KEYCODE_DPAD_CENTER:
+                startShowActivityTimer();
+                break;
             default:
                 // pass through
         }
         return super.onKeyDown(keyCode, event);
     }
+
+    private void startShowActivityTimer () {
+        handler.removeMessages(0);
+        int seconds = Settings.System.getInt(getContentResolver(), KEY_MENU_TIME, DEFUALT_MENU_TIME);
+        Log.d(TAG, "[startShowActivityTimer] seconds = " + seconds);
+        handler.sendEmptyMessageDelayed(0, seconds * 1000);
+    }
+
+    Handler handler = new Handler() {
+        public void handleMessage(Message msg) {
+            finish();
+        }
+    };
 	
     @Override
     public void onAttachedToWindow() {
