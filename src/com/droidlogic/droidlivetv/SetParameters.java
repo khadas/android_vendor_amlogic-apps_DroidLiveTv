@@ -14,7 +14,7 @@ import com.droidlogic.app.tv.TvControlManager;
 import com.droidlogic.app.SystemControlManager;
 import com.droidlogic.app.tv.TvDataBaseManager;
 import com.droidlogic.app.tv.DroidLogicTvUtils;
-import com.droidlogic.app.tv.TVInSignalInfo;
+import com.droidlogic.app.tv.TvInSignalInfo;
 import com.droidlogic.app.tv.ChannelInfo;
 
 public class SetParameters {
@@ -124,16 +124,16 @@ public class SetParameters {
         Log.d(TAG, "setAspectRatio:" + mode);
         if (mode == 0) {
             mTvControlManager.SetDisplayMode(TvControlManager.Display_Mode.DISPLAY_MODE_NORMAL,
-                    mTvSourceInput, TVInSignalInfo.SignalFmt.TVIN_SIG_FMT_NULL/*mTvControlManager.GetCurrentSignalInfo().sigFmt*/, 1);
+                    mTvSourceInput, TvInSignalInfo.SignalFmt.TVIN_SIG_FMT_NULL/*mTvControlManager.GetCurrentSignalInfo().sigFmt*/, 1);
         } else if (mode == 1) {
             mTvControlManager.SetDisplayMode(TvControlManager.Display_Mode.DISPLAY_MODE_MODE43,
-                    mTvSourceInput, TVInSignalInfo.SignalFmt.TVIN_SIG_FMT_NULL/*mTvControlManager.GetCurrentSignalInfo().sigFmt*/, 1);
+                    mTvSourceInput, TvInSignalInfo.SignalFmt.TVIN_SIG_FMT_NULL/*mTvControlManager.GetCurrentSignalInfo().sigFmt*/, 1);
         } else if (mode == 2) {
             mTvControlManager.SetDisplayMode(TvControlManager.Display_Mode.DISPLAY_MODE_FULL,
-                    mTvSourceInput, TVInSignalInfo.SignalFmt.TVIN_SIG_FMT_NULL/*mTvControlManager.GetCurrentSignalInfo().sigFmt*/, 1);
+                    mTvSourceInput, TvInSignalInfo.SignalFmt.TVIN_SIG_FMT_NULL/*mTvControlManager.GetCurrentSignalInfo().sigFmt*/, 1);
         } else if (mode == 3) {
             mTvControlManager.SetDisplayMode(TvControlManager.Display_Mode.DISPLAY_MODE_169,
-                    mTvSourceInput, TVInSignalInfo.SignalFmt.TVIN_SIG_FMT_NULL/*mTvControlManager.GetCurrentSignalInfo().sigFmt*/, 1);
+                    mTvSourceInput, TvInSignalInfo.SignalFmt.TVIN_SIG_FMT_NULL/*mTvControlManager.GetCurrentSignalInfo().sigFmt*/, 1);
         }
     }
 

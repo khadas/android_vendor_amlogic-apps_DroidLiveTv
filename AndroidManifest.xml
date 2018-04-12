@@ -14,6 +14,10 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/shortcut_style" >
+
+        <uses-library android:name="droidlogic.software.core" />
+        <uses-library android:name="droidlogic.tv.software.core" />
+
         <activity
             android:name=".DroidLiveTvActivity"
             android:label="@string/app_name" >

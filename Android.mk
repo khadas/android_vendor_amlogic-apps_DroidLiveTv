@@ -20,11 +20,16 @@ LOCAL_SRC_FILES := $(call all-java-files-under, src)
 LOCAL_PACKAGE_NAME := DroidLiveTv
 LOCAL_CERTIFICATE := platform
 LOCAL_JAVA_LIBRARIES := droidlogic droidlogic-tv
+LOCAL_DEX_PREOPT := false
 LOCAL_STATIC_JAVA_LIBRARIES := \
     android-support-v4 \
     android-support-v17-leanback \
     android-support-annotations \
     android-support-v7-recyclerview \
+
+ifeq ($(shell test $(PLATFORM_SDK_VERSION) -ge 26 && echo OK),OK)
+LOCAL_PROPRIETARY_MODULE := true
+endif
 
 include $(BUILD_PACKAGE)
 ##################################################

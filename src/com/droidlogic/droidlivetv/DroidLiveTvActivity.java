@@ -26,7 +26,7 @@ public class DroidLiveTvActivity extends Activity {
     private Context mContext;
     private static final String KEY_MENU_TIME = "menu_time";
     private static final int DEFUALT_MENU_TIME = 10;
-    
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -74,6 +74,15 @@ public class DroidLiveTvActivity extends Activity {
     private void startShowActivityTimer () {
         handler.removeMessages(0);
         int seconds = Settings.System.getInt(getContentResolver(), KEY_MENU_TIME, DEFUALT_MENU_TIME);
+        if (seconds == 0) {
+            seconds = 10;
+        } else if (seconds == 1) {
+            seconds = 20;
+        } else if (seconds == 2) {
+            seconds = 30;
+        } else if (seconds == 3) {
+            seconds = 60;
+        }
         Log.d(TAG, "[startShowActivityTimer] seconds = " + seconds);
         handler.sendEmptyMessageDelayed(0, seconds * 1000);
     }
@@ -83,7 +92,7 @@ public class DroidLiveTvActivity extends Activity {
             finish();
         }
     };
-	
+
     @Override
     public void onAttachedToWindow() {
         super.onAttachedToWindow();
@@ -93,7 +102,7 @@ public class DroidLiveTvActivity extends Activity {
         ((WindowManager) getSystemService(Context.WINDOW_SERVICE)).addView(mOverlayRootView,
                 windowParams);
     }
-	
+
     @Override
     public void onDetachedFromWindow() {
         super.onDetachedFromWindow();

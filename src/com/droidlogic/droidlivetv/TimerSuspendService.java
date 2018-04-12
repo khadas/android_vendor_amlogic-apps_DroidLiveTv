@@ -23,7 +23,7 @@ import android.util.Log;
 import com.droidlogic.droidlivetv.R;
 import com.droidlogic.app.tv.DroidLogicTvUtils;
 import com.droidlogic.app.DroidLogicKeyEvent;
-
+import com.droidlogic.app.SystemControlManager;
 
 public class TimerSuspendService extends Service {
     private final String TAG = "TimerSuspendService";
@@ -33,9 +33,12 @@ public class TimerSuspendService extends Service {
     private TextView mCountDownText;
     private int mSuspendCount = 0;
 
+    private SystemControlManager mSystemControlManager;
+
     @Override
     public void onCreate() {
         super.onCreate();
+        mSystemControlManager = new SystemControlManager(this);
         Log.d(TAG, "onCreate");
     }
 
@@ -69,6 +72,7 @@ public class TimerSuspendService extends Service {
         mBn.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
+                mSystemControlManager.setProperty("tv.sleep_timer", 0 + "");
                 stopSelf();
             }
         });
