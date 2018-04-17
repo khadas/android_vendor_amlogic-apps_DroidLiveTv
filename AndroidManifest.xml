@@ -29,12 +29,12 @@
         </activity>
         <service android:name=".TimerSuspendService" >
             <intent-filter>
-                <action android:name="android.intent.action.suspend"></action>
+                <action android:name="droidlogic.intent.action.suspend"></action>
             </intent-filter>
         </service>
         <receiver android:name="com.droidlogic.droidlivetv.TimerSuspendReceiver">
             <intent-filter>
-                <action android:name="android.intent.action.TIMER_SUSPEND" />
+                <action android:name="droidlogic.intent.action.TIMER_SUSPEND" />
             </intent-filter>
         </receiver>
     </application>
