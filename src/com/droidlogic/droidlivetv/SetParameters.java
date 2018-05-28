@@ -63,7 +63,7 @@ public class SetParameters {
     }
 
     public  int getPictureModeStatus () {
-        int pictureModeIndex = mTvControlManager.GetPQMode(mTvSourceInput);
+        int pictureModeIndex = mSystemControlManager.GetPQMode();
         Log.d(TAG, "getPictureModeStatus:" + pictureModeIndex);
         return pictureModeIndex;
     }
@@ -71,16 +71,16 @@ public class SetParameters {
     public void setPictureMode (int mode) {
         Log.d(TAG, "setPictureMode:" + mode);
         if (mode == 0) {
-            mTvControlManager.SetPQMode(TvControlManager.PQMode.PQ_MODE_STANDARD, mTvSourceInput, 1);
+            mSystemControlManager.SetPQMode(SystemControlManager.PQMode.PQ_MODE_STANDARD.toInt(), 1, 0);
         } else if (mode == 1) {
-            mTvControlManager.SetPQMode(TvControlManager.PQMode.PQ_MODE_BRIGHT, mTvSourceInput, 1);
+            mSystemControlManager.SetPQMode(SystemControlManager.PQMode.PQ_MODE_BRIGHT.toInt(), 1, 0);
         } else if (mode == 2) {
-            mTvControlManager.SetPQMode(TvControlManager.PQMode.PQ_MODE_SOFTNESS, mTvSourceInput, 1);
+            mSystemControlManager.SetPQMode(SystemControlManager.PQMode.PQ_MODE_SOFTNESS.toInt(), 1, 0);
         } else if (mode == 3) {
-            mTvControlManager.SetPQMode(TvControlManager.PQMode.PQ_MODE_USER, mTvSourceInput, 1);
+            mSystemControlManager.SetPQMode(SystemControlManager.PQMode.PQ_MODE_USER.toInt(), 1, 0);
         }
     }
-	
+
     public  int getSoundModeStatus () {
         int itemPosition = mTvControlManager.GetCurAudioSoundMode();
         Log.d(TAG, "getSoundModeStatus:" + itemPosition);
@@ -108,13 +108,13 @@ public class SetParameters {
     }
 
     public int getAspectRatioStatus () {
-        int itemPosition = mTvControlManager.GetDisplayMode(mTvSourceInput);
+        int itemPosition = mSystemControlManager.GetDisplayMode(mTvSourceInput.toInt());
         Log.d(TAG, "getAspectRatioStatus:" + itemPosition);
-        if (itemPosition == TvControlManager.Display_Mode.DISPLAY_MODE_MODE43.toInt())
+        if (itemPosition == SystemControlManager.Display_Mode.DISPLAY_MODE_MODE43.toInt())
             return 1;
-        else if (itemPosition == TvControlManager.Display_Mode.DISPLAY_MODE_FULL.toInt())
+        else if (itemPosition == SystemControlManager.Display_Mode.DISPLAY_MODE_FULL.toInt())
             return 2;
-        else if (itemPosition == TvControlManager.Display_Mode.DISPLAY_MODE_169.toInt())
+        else if (itemPosition == SystemControlManager.Display_Mode.DISPLAY_MODE_169.toInt())
             return 3;
         else
             return 0;
@@ -123,17 +123,13 @@ public class SetParameters {
     public void setAspectRatio(int mode) {
         Log.d(TAG, "setAspectRatio:" + mode);
         if (mode == 0) {
-            mTvControlManager.SetDisplayMode(TvControlManager.Display_Mode.DISPLAY_MODE_NORMAL,
-                    mTvSourceInput, TvInSignalInfo.SignalFmt.TVIN_SIG_FMT_NULL/*mTvControlManager.GetCurrentSignalInfo().sigFmt*/, 1);
+            mSystemControlManager.SetDisplayMode(mTvSourceInput.toInt(), SystemControlManager.Display_Mode.DISPLAY_MODE_NORMAL, 1);
         } else if (mode == 1) {
-            mTvControlManager.SetDisplayMode(TvControlManager.Display_Mode.DISPLAY_MODE_MODE43,
-                    mTvSourceInput, TvInSignalInfo.SignalFmt.TVIN_SIG_FMT_NULL/*mTvControlManager.GetCurrentSignalInfo().sigFmt*/, 1);
+            mSystemControlManager.SetDisplayMode(mTvSourceInput.toInt(), SystemControlManager.Display_Mode.DISPLAY_MODE_MODE43, 1);
         } else if (mode == 2) {
-            mTvControlManager.SetDisplayMode(TvControlManager.Display_Mode.DISPLAY_MODE_FULL,
-                    mTvSourceInput, TvInSignalInfo.SignalFmt.TVIN_SIG_FMT_NULL/*mTvControlManager.GetCurrentSignalInfo().sigFmt*/, 1);
+            mSystemControlManager.SetDisplayMode(mTvSourceInput.toInt(), SystemControlManager.Display_Mode.DISPLAY_MODE_FULL, 1);
         } else if (mode == 3) {
-            mTvControlManager.SetDisplayMode(TvControlManager.Display_Mode.DISPLAY_MODE_169,
-                    mTvSourceInput, TvInSignalInfo.SignalFmt.TVIN_SIG_FMT_NULL/*mTvControlManager.GetCurrentSignalInfo().sigFmt*/, 1);
+            mSystemControlManager.SetDisplayMode(mTvSourceInput.toInt(), SystemControlManager.Display_Mode.DISPLAY_MODE_169,  1);
         }
     }
 
