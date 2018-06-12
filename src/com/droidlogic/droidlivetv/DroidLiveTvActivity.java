@@ -4,6 +4,8 @@ import com.droidlogic.droidlivetv.ui.MultiOptionFragment;
 import com.droidlogic.droidlivetv.ui.OverlayRootView;
 import com.droidlogic.droidlivetv.ui.SideFragmentManager;
 
+import com.droidlogic.app.DroidLogicKeyEvent;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -57,7 +59,7 @@ public class DroidLiveTvActivity extends Activity {
         switch (keyCode) {
             case KeyEvent.KEYCODE_BACK:
                 //mSideFragmentManager.popSideFragment();
-                finish();
+                handler.sendEmptyMessage(0);
                 return true;
             case KeyEvent.KEYCODE_DPAD_UP:
             case KeyEvent.KEYCODE_DPAD_DOWN:
@@ -69,6 +71,24 @@ public class DroidLiveTvActivity extends Activity {
                 // pass through
         }
         return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        Log.d(TAG, "onKeyUp(" + keyCode + ", " + event + ")");
+        switch (keyCode) {
+            case DroidLogicKeyEvent.KEYCODE_TV_SHORTCUTKEY_VIEWMODE:
+            case DroidLogicKeyEvent.KEYCODE_TV_SHORTCUTKEY_VOICEMODE:
+            case DroidLogicKeyEvent.KEYCODE_TV_SHORTCUTKEY_DISPAYMODE:
+            case DroidLogicKeyEvent.KEYCODE_TV_SLEEP:
+            case DroidLogicKeyEvent.KEYCODE_FAV:
+            case DroidLogicKeyEvent.KEYCODE_LIST:
+                handler.sendEmptyMessage(0);
+                return true;
+            default:
+                // pass through
+        }
+        return super.onKeyUp(keyCode, event);
     }
 
     private void startShowActivityTimer () {
@@ -124,5 +144,6 @@ public class DroidLiveTvActivity extends Activity {
 
     public void onDestroy() {
         super.onDestroy();
+        handler.removeMessages(0);
     }
 }
