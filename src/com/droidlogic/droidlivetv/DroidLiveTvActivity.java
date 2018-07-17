@@ -21,13 +21,15 @@ import android.os.Handler;
 import android.os.Message;
 import android.provider.Settings;
 
+import com.droidlogic.app.tv.DroidLogicTvUtils;
+
 public class DroidLiveTvActivity extends Activity {
     private final static String TAG = "DroidLiveTvActivity";
     private SideFragmentManager mSideFragmentManager;
     private OverlayRootView mOverlayRootView;
     private Context mContext;
-    private static final String KEY_MENU_TIME = "menu_time";
-    private static final int DEFUALT_MENU_TIME = 10;
+    private static final String KEY_MENU_TIME = DroidLogicTvUtils.KEY_MENU_TIME;
+    private static final int DEFUALT_MENU_TIME = DroidLogicTvUtils.DEFUALT_MENU_TIME;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,16 +97,24 @@ public class DroidLiveTvActivity extends Activity {
         handler.removeMessages(0);
         int seconds = Settings.System.getInt(getContentResolver(), KEY_MENU_TIME, DEFUALT_MENU_TIME);
         if (seconds == 0) {
-            seconds = 10;
+            seconds = 15;
         } else if (seconds == 1) {
-            seconds = 20;
-        } else if (seconds == 2) {
             seconds = 30;
-        } else if (seconds == 3) {
+        } else if (seconds == 2) {
             seconds = 60;
+        } else if (seconds == 3) {
+            seconds = 120;
+        } else if (seconds == 4) {
+            seconds = 240;
+        } else {
+            seconds = 0;
         }
         Log.d(TAG, "[startShowActivityTimer] seconds = " + seconds);
-        handler.sendEmptyMessageDelayed(0, seconds * 1000);
+        if (seconds > 0) {
+            handler.sendEmptyMessageDelayed(0, seconds * 1000);
+        } else {
+            handler.removeMessages(0);
+        }
     }
 
     Handler handler = new Handler() {
