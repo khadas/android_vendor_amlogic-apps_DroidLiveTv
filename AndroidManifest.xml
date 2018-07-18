@@ -27,6 +27,13 @@
                 <!---<category android:name="android.intent.category.LAUNCHER" />-->
             </intent-filter>
         </activity>
+        <activity
+            android:name=".shortcut.ShortCutActivity"
+            android:label="@string/app1_name" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>
         <service android:name=".TimerSuspendService" >
             <intent-filter>
                 <action android:name="droidlogic.intent.action.suspend"></action>

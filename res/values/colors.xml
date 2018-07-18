@@ -7,5 +7,12 @@
     <color name="side_panel_header_background">#37474F</color>
     <color name="option_item_text_color">#FFEEEEEE</color>
     <color name="option_item_secondary_text_color">#4DEEEEEE</color>
- 
+
+     <!-- epg -->
+     <color name="color_text_blue_0">#FF39A8D5</color>
+     <color name="color_text_blue_1">#FF92D4EA</color>
+     <color name="divider_1">#44FFFFFF</color>
+     <color name="selected">#FF019587</color>
+     <color name="save_selected">#55019587</color>
+     <color name="color_text_focused">#FFFFFFFF</color>
 </resources>
