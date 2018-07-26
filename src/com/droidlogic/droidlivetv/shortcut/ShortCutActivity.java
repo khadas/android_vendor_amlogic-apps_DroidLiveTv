@@ -345,12 +345,12 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
         tx_date.setText(dateAndTime[0] + "." + dateAndTime[1] + "." + dateAndTime[2] + "   " + dateAndTime[3] + ":" + dateAndTime[4]);
     }
 
-    public ArrayList<ArrayMap<String, Object>> getChannelList (ArrayList<ChannelInfo> channelInfoList) {
+    public ArrayList<ArrayMap<String, Object>> getDTVChannelList (ArrayList<ChannelInfo> channelInfoList) {
         ArrayList<ArrayMap<String, Object>> list =  new ArrayList<ArrayMap<String, Object>>();
         if (channelInfoList.size() > 0) {
             for (int i = 0 ; i < channelInfoList.size(); i++) {
                 ChannelInfo info = channelInfoList.get(i);
-                if (info != null) {
+                if (info != null && info.isDigitalChannel()) {
                     ArrayMap<String, Object> item = new ArrayMap<String, Object>();
 
                     item.put(GuideListView.ITEM_1, info.getNumber() + "  " + info.getDisplayNameLocal());
@@ -381,7 +381,7 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
         channelInfoList = mTvDataBaseManager.getChannelList(mCurrentInputId, Channels.SERVICE_TYPE_AUDIO_VIDEO, true);
         channelInfoList.addAll(mTvDataBaseManager.getChannelList(mCurrentInputId, Channels.SERVICE_TYPE_AUDIO, true));
 
-        list_channels = getChannelList(channelInfoList);
+        list_channels = getDTVChannelList(channelInfoList);
 
         handler.sendEmptyMessage(MSG_UPDATE_CHANNELS);
     }
