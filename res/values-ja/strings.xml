@@ -10,4 +10,7 @@
     <string name="appointed_cancel">予約をキャンセルする</string>
     <string name="appointed_expired">番組が期限切れになる!</string>
     <string name="cancel">きゃんせる</string>
+	<string name="ok">さだま·る</string>
+    <string name="switch_program_propmt">秒後に自動切り替えます。</string>
+    <string name="watch_program">予約を見ています: </string>
 </resources>

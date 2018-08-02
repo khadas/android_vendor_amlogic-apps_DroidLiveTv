@@ -686,7 +686,7 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
     }
 
     private PendingIntent buildPendingIntent (Program program) {
-        Intent intent = new Intent(DroidLogicTvUtils.ACTION_PROGRAM_APPOINTED);
+        Intent intent = new Intent("droidlogic.intent.action.droid_appointed_program");
         intent.putExtra(DroidLogicTvUtils.EXTRA_PROGRAM_ID, program.getId());
         intent.putExtra(DroidLogicTvUtils.EXTRA_CHANNEL_ID, program.getChannelId());
         //sendBroadcast(intent);

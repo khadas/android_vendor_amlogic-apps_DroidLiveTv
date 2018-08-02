@@ -58,4 +58,7 @@
     <string name="appointed_cancel">Cancel appointment</string>
     <string name="appointed_expired">Program expired!</string>
     <string name="cancel">cancel</string>
+    <string name="ok">OK</string>
+    <string name="switch_program_propmt">seconds later auto switch</string>
+    <string name="watch_program">Watch appointed program: </string>
 </resources>

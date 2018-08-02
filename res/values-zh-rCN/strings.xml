@@ -52,4 +52,7 @@
     <string name="appointed_cancel">预约取消</string>
     <string name="appointed_expired">节目过期!</string>
     <string name="cancel">取消</string>
+	<string name="ok">确定</string>
+    <string name="switch_program_propmt">秒后自动切换</string>
+    <string name="watch_program">观看预约的节目: </string>
 </resources>

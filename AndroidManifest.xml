@@ -44,6 +44,11 @@
                 <action android:name="droidlogic.intent.action.TIMER_SUSPEND" />
             </intent-filter>
         </receiver>
+        <receiver android:name=".shortcut.AppointedProgramReceiver" >
+            <intent-filter>
+                <action android:name="droidlogic.intent.action.droid_appointed_program" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>
