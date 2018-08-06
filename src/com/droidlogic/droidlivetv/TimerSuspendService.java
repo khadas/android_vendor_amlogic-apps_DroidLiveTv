@@ -32,13 +32,17 @@ public class TimerSuspendService extends Service {
     private AlertDialog mDialog;//use to dismiss
     private TextView mCountDownText;
     private int mSuspendCount = 0;
+    private boolean mEnableNoSignalTimeout = false;
+    private boolean mEnableSuspendTimeout = false;
 
     private SystemControlManager mSystemControlManager;
+    private Context mContext = null;
 
     @Override
     public void onCreate() {
         super.onCreate();
         mSystemControlManager = new SystemControlManager(this);
+        this.mContext = this;
         Log.d(TAG, "onCreate");
     }
 
@@ -52,8 +56,21 @@ public class TimerSuspendService extends Service {
         Log.d ( TAG, "onStartCommand");
         if (intent != null)
             Log.d(TAG, "intent=" + intent);
-
-        reset_shutdown_time();
+        mEnableSuspendTimeout = intent.getBooleanExtra(DroidLogicTvUtils.KEY_ENABLE_SUSPEND_TIMEOUT, false);
+        mEnableNoSignalTimeout = intent.getBooleanExtra(DroidLogicTvUtils.KEY_ENABLE_NOSIGNAL_TIMEOUT, false);
+        //stop it if need cancel
+        if (!mEnableSuspendTimeout) {
+            if (!mEnableNoSignalTimeout) {
+                mSystemControlManager.setProperty("tv.sleep_timer", 0 + "");
+                stopSelf();
+            } else {
+                remove_shutdown_time();
+                reset_shutdown_time(10 * 60);//10min
+            }
+        } else {
+            remove_shutdown_time();
+            reset_shutdown_time(60);//one min
+        }
 
         return super.onStartCommand ( intent, flags, startId );
     }
@@ -72,14 +89,31 @@ public class TimerSuspendService extends Service {
         mBn.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                mSystemControlManager.setProperty("tv.sleep_timer", 0 + "");
-                stopSelf();
+                checkTimeoutStatus();
             }
         });
         mCountDownText = (TextView) suspendDialogView.findViewById(R.id.tv_dialog);
         suspendDialog.setView(suspendDialogView);
         mDialog = suspendDialog.create();
         mDialog.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
+        mDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialog) {
+                checkTimeoutStatus();
+            }
+        });
+    }
+
+    private void checkTimeoutStatus() {
+        if (!mEnableSuspendTimeout) {
+            if (mEnableNoSignalTimeout) {
+                remove_shutdown_time();
+                reset_shutdown_time(10 * 60);//10min
+            }
+        } else {
+            mSystemControlManager.setProperty("tv.sleep_timer", 0 + "");
+            stopSelf();
+        }
     }
 
     private Handler timeSuspend_handler = new Handler();
@@ -114,8 +148,8 @@ public class TimerSuspendService extends Service {
         }
     };
 
-    private void reset_shutdown_time() {
-        mSuspendCount =  60;
+    private void reset_shutdown_time(int time) {
+        mSuspendCount =  time;
         timeSuspend_handler.post(timeSuspend_runnable);
     }
 

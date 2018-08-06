@@ -7,6 +7,8 @@ import android.content.Intent;
 import android.os.SystemProperties;
 import android.util.Log;
 
+import com.droidlogic.app.tv.DroidLogicTvUtils;
+
 public class TimerSuspendReceiver extends BroadcastReceiver {
     private static final String TAG = "TimerSuspendReceiver";
 
@@ -16,11 +18,14 @@ public class TimerSuspendReceiver extends BroadcastReceiver {
         Log.d(TAG, "onReceive: " + intent);
 
         mContext = context;
-        startSleepTimer();
+        startSleepTimer(intent);
     }
 
-    public void startSleepTimer () {
+    public void startSleepTimer (Intent intent) {
         Log.d(TAG, "startSleepTimer");
-        mContext.startService (new Intent(mContext, TimerSuspendService.class ));
+        Intent intentservice = new Intent(mContext, TimerSuspendService.class );
+        intentservice.putExtra(DroidLogicTvUtils.KEY_ENABLE_NOSIGNAL_TIMEOUT, intent.getBooleanExtra(DroidLogicTvUtils.KEY_ENABLE_NOSIGNAL_TIMEOUT, false));
+        intentservice.putExtra(DroidLogicTvUtils.KEY_ENABLE_SUSPEND_TIMEOUT, intent.getBooleanExtra(DroidLogicTvUtils.KEY_ENABLE_SUSPEND_TIMEOUT, false));
+        mContext.startService (intentservice);
     }
 }

@@ -127,6 +127,7 @@ public class AppointedProgramReceiver extends BroadcastReceiver implements OnCli
 
     @Override
     public void onClick(View v) {
+        timer.cancel();
         switch (v.getId()) {
             case R.id.dialog_cancel:
                 if (mAlertDialog != null) {
@@ -140,7 +141,6 @@ public class AppointedProgramReceiver extends BroadcastReceiver implements OnCli
                 startLiveTv();
                 break;
         }
-        timer.cancel();
     }
 
     @Override
