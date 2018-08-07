@@ -54,6 +54,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.TimeZone;
 import java.text.SimpleDateFormat;
+import java.util.Iterator;
 
 public class ShortCutActivity extends Activity implements ListItemSelectedListener, OnItemClickListener {
     private static final String TAG = "ShortCutActivity";
@@ -347,6 +348,7 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
 
     public ArrayList<ArrayMap<String, Object>> getDTVChannelList (ArrayList<ChannelInfo> channelInfoList) {
         ArrayList<ArrayMap<String, Object>> list =  new ArrayList<ArrayMap<String, Object>>();
+        int dtvchannelindex = 0;
         if (channelInfoList.size() > 0) {
             for (int i = 0 ; i < channelInfoList.size(); i++) {
                 ChannelInfo info = channelInfoList.get(i);
@@ -362,7 +364,8 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
                     }
                     list.add(item);
                     if (mCurrentChannelId == info.getId())
-                        currentChannelIndex = i;
+                        currentChannelIndex = dtvchannelindex;
+                    dtvchannelindex++;
                 }
             }
         }
@@ -380,6 +383,14 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
 
         channelInfoList = mTvDataBaseManager.getChannelList(mCurrentInputId, Channels.SERVICE_TYPE_AUDIO_VIDEO, true);
         channelInfoList.addAll(mTvDataBaseManager.getChannelList(mCurrentInputId, Channels.SERVICE_TYPE_AUDIO, true));
+        Iterator it = channelInfoList.iterator();
+        ChannelInfo channel = null;
+        while (it.hasNext()) {
+            channel = (ChannelInfo)it.next();
+            if (channel != null && !channel.isDigitalChannel()) {
+                it.remove();
+            }
+        }
 
         list_channels = getDTVChannelList(channelInfoList);
 
