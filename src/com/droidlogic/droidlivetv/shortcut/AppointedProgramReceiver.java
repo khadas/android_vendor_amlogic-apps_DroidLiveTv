@@ -165,6 +165,7 @@ public class AppointedProgramReceiver extends BroadcastReceiver implements OnCli
             am.forceStopPackage(PACKAGE_LAUNCHER);
         }
         Intent intent = new Intent(TvInputManager.ACTION_SETUP_INPUTS);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK );
         intent.putExtra("from_tv_source", true);
         intent.putExtra(TvInputInfo.EXTRA_INPUT_ID, inputid);
         intent.putExtra(DroidLogicTvUtils.EXTRA_CHANNEL_ID, channelid);

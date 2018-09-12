@@ -128,6 +128,7 @@ public class TimerSuspendService extends Service {
                     InputManager.getInstance().injectInputEvent(down, InputManager.INJECT_INPUT_EVENT_MODE_WAIT_FOR_FINISH);
                     InputManager.getInstance().injectInputEvent(up, InputManager.INJECT_INPUT_EVENT_MODE_WAIT_FOR_FINISH);
                     stopSelf();
+                    remove_shutdown_time();
                 } else {
                     if (mSuspendCount == 60) {
                         String str = mSuspendCount + " " + getResources().getString(R.string.countdown_tips);
