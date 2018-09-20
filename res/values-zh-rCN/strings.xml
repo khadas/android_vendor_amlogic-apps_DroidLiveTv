@@ -11,6 +11,8 @@
     <string name="standard">标准</string>
     <string name="vivid">明亮</string>
     <string name="soft">柔和</string>
+    <string name="sport">运动</string>
+    <string name="monitor">显示器</string>
     <string name="user">用户</string>
     <!-- sound mode -->
     <string name="sound">声音</string>

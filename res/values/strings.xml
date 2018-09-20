@@ -15,6 +15,8 @@
     <string name="standard">standard</string>
     <string name="vivid">vivid</string>
     <string name="soft">soft</string>
+    <string name="sport">sport</string>
+    <string name="monitor">monitor</string>
     <string name="user">user</string>
     <!-- sound mode -->
     <string name="sound">Sound</string>
@@ -22,6 +24,7 @@
     <string name="music">music</string>
     <string name="news">news</string>
     <string name="movie">movie</string>
+    <string name="game">game</string>
     <!-- ratio mode -->
     <string name="aspect_ratio">Aspect Ratio</string>
     <string name="auto">auto</string>

@@ -29,7 +29,23 @@ public class SetParameters {
     private Context mContext;
     private Bundle mBundle;
     private int mDeviceId;
-	
+
+    public static final int PIC_STANDARD = 0;
+    public static final int PIC_VIVID    = 1;
+    public static final int PIC_SOFT     = 2;
+    public static final int PIC_USER     = 3;
+    public static final int PIC_MOVIE    = 4;
+    public static final int PIC_MONITOR  = 6;
+    public static final int PIC_SPORT    = 8;
+
+    public static final int STATUS_STANDARD = 0;
+    public static final int STATUS_VIVID    = 1;
+    public static final int STATUS_SOFT     = 2;
+    public static final int STATUS_SPORT    = 3;
+    public static final int STATUS_MOVIE    = 4;
+    public static final int STATUS_MONITOR  = 5;
+    public static final int STATUS_USER     = 6;
+
     public SetParameters(Context context, Bundle bundle) {
         this.mContext = context;
         this.mBundle = bundle;
@@ -62,10 +78,27 @@ public class SetParameters {
         }
     }
 
-    public  int getPictureModeStatus () {
+    public int getPictureModeStatus () {
         int pictureModeIndex = mSystemControlManager.GetPQMode();
         Log.d(TAG, "getPictureModeStatus:" + pictureModeIndex);
-        return pictureModeIndex;
+        switch (pictureModeIndex) {
+            case PIC_STANDARD:
+                return STATUS_STANDARD;
+            case PIC_VIVID:
+                return STATUS_VIVID;
+            case PIC_SOFT:
+                return STATUS_SOFT;
+            case PIC_SPORT:
+                return STATUS_SPORT;
+            case PIC_MOVIE:
+                return STATUS_MOVIE;
+            case PIC_MONITOR:
+                return STATUS_MONITOR;
+            case PIC_USER:
+                return isHdmiSource() ? STATUS_USER : STATUS_MONITOR;
+            default:
+                return STATUS_STANDARD;
+        }
     }
 
     public void setPictureMode (int mode) {
@@ -77,6 +110,13 @@ public class SetParameters {
         } else if (mode == 2) {
             mSystemControlManager.SetPQMode(SystemControlManager.PQMode.PQ_MODE_SOFTNESS.toInt(), 1, 0);
         } else if (mode == 3) {
+            mSystemControlManager.SetPQMode(SystemControlManager.PQMode.PQ_MODE_SPORTS.toInt(), 1, 0);
+        } else if (mode == 4) {
+            mSystemControlManager.SetPQMode(SystemControlManager.PQMode.PQ_MODE_MOVIE.toInt(), 1, 0);
+        } else if (mode == 5) {
+            mSystemControlManager.SetPQMode(isHdmiSource()
+                ? SystemControlManager.PQMode.PQ_MODE_MONITOR.toInt() : SystemControlManager.PQMode.PQ_MODE_USER.toInt(), 1, 0);
+        } else if (mode == 6) {
             mSystemControlManager.SetPQMode(SystemControlManager.PQMode.PQ_MODE_USER.toInt(), 1, 0);
         }
     }
@@ -102,6 +142,9 @@ public class SetParameters {
             mTvControlManager.SetAudioSoundMode(TvControlManager.Sound_Mode.SOUND_MODE_THEATER);
             mTvControlManager.SaveCurAudioSoundMode(TvControlManager.Sound_Mode.SOUND_MODE_THEATER.toInt());
         } else if (mode == 4) {
+            mTvControlManager.SetAudioSoundMode(TvControlManager.Sound_Mode.SOUND_MODE_GAME);
+            mTvControlManager.SaveCurAudioSoundMode(TvControlManager.Sound_Mode.SOUND_MODE_GAME.toInt());
+        } else if (mode == 5) {
             mTvControlManager.SetAudioSoundMode(TvControlManager.Sound_Mode.SOUND_MODE_USER);
             mTvControlManager.SaveCurAudioSoundMode(TvControlManager.Sound_Mode.SOUND_MODE_USER.toInt());
         }
@@ -159,5 +202,12 @@ public class SetParameters {
 
         alarm.setExact(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime() + timeout, pendingIntent);
         Log.d(TAG, "start time count down after " + timeout + " ms");
+    }
+
+    public boolean isHdmiSource() {
+        if (mTvSourceInput != null) {
+            return mTvSource == TvControlManager.SourceInput_Type.SOURCE_TYPE_HDMI;
+        }
+        return false;
     }
 }

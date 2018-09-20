@@ -56,8 +56,9 @@ public class MultiOptionFragment extends SideFragment {
     private final static int[] KEYVALUE = {DroidLogicKeyEvent.KEYCODE_TV_SHORTCUTKEY_VIEWMODE, DroidLogicKeyEvent.KEYCODE_TV_SHORTCUTKEY_VOICEMODE
         , DroidLogicKeyEvent.KEYCODE_TV_SHORTCUTKEY_DISPAYMODE, DroidLogicKeyEvent.KEYCODE_FAV,
         DroidLogicKeyEvent.KEYCODE_LIST, DroidLogicKeyEvent.KEYCODE_TV_SLEEP};
-    private final static int[] PICTRUEMODE = {R.string.picture_mode, R.string.standard, R.string.vivid, R.string.soft, R.string.user};
-    private final static int[] SOUNDMODE = {R.string.sound_mode, R.string.standard, R.string.music, R.string.news, R.string.movie, R.string.user};
+    private final static int[] PICTRUEMODE = {R.string.picture_mode, R.string.standard, R.string.vivid, R.string.soft, R.string.sport, R.string.movie, R.string.user};
+    private final static int[] HDMI_PICTRUEMODE = {R.string.picture_mode, R.string.standard, R.string.vivid, R.string.soft, R.string.sport, R.string.movie, R.string.monitor, R.string.user};
+    private final static int[] SOUNDMODE = {R.string.sound_mode, R.string.standard, R.string.music, R.string.news, R.string.movie, R.string.game, R.string.user};
     private final static int[] RATIOMODE = {R.string.aspect_ratio, R.string.auto, R.string.four2three, R.string.panorama, R.string.full_screen,};
     private final static int[] FAV = {R.string.favourite_list, R.string.tv, R.string.radio};
     private final static int[] LIST = {R.string.channel_list, R.string.tv, R.string.radio};
@@ -121,7 +122,7 @@ public class MultiOptionFragment extends SideFragment {
                 title = getString(SLEEPMODE[0]);
                 break;
             }
-        }		
+        }
         return title;
     }
 
@@ -152,7 +153,7 @@ public class MultiOptionFragment extends SideFragment {
                 keywords = TYPE[5];
                 break;
             }
-        }		
+        }
         return keywords;
     }
 
@@ -160,7 +161,7 @@ public class MultiOptionFragment extends SideFragment {
         int[] id = null;
         switch (Value) {
             case DroidLogicKeyEvent.KEYCODE_TV_SHORTCUTKEY_VIEWMODE: {
-                id = PICTRUEMODE;
+                id = mSetParameters.isHdmiSource() ? HDMI_PICTRUEMODE : PICTRUEMODE;
                 break;
             }
             case DroidLogicKeyEvent.KEYCODE_TV_SHORTCUTKEY_VOICEMODE: {
