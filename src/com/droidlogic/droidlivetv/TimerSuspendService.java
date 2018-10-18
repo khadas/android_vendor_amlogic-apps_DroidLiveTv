@@ -19,6 +19,7 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
 import android.util.Log;
+import java.lang.reflect.Method;
 
 import com.droidlogic.droidlivetv.R;
 import com.droidlogic.app.tv.DroidLogicTvUtils;
@@ -37,6 +38,7 @@ public class TimerSuspendService extends Service {
 
     private SystemControlManager mSystemControlManager;
     private Context mContext = null;
+    public static final int INJECT_INPUT_EVENT_MODE_WAIT_FOR_FINISH = 2;
 
     @Override
     public void onCreate() {
@@ -116,6 +118,16 @@ public class TimerSuspendService extends Service {
         }
     }
 
+    private void GetinjectInputEvent(KeyEvent keyevent, int mode) {
+        try {
+            Class<?> cls = Class.forName("android.hardware.input.InputManager");
+            Method method = cls.getMethod("injectInputEvent", KeyEvent.class, int.class);
+            method.invoke(cls.newInstance(), keyevent, mode);
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     private Handler timeSuspend_handler = new Handler();
     private Runnable timeSuspend_runnable = new Runnable() {
         @Override
@@ -125,8 +137,8 @@ public class TimerSuspendService extends Service {
                     long now = SystemClock.uptimeMillis();
                     KeyEvent down = new KeyEvent(now, now, KeyEvent.ACTION_DOWN, DroidLogicKeyEvent.KEYCODE_POWER, 0);
                     KeyEvent up = new KeyEvent(now, now, KeyEvent.ACTION_UP, DroidLogicKeyEvent.KEYCODE_POWER, 0);
-                    InputManager.getInstance().injectInputEvent(down, InputManager.INJECT_INPUT_EVENT_MODE_WAIT_FOR_FINISH);
-                    InputManager.getInstance().injectInputEvent(up, InputManager.INJECT_INPUT_EVENT_MODE_WAIT_FOR_FINISH);
+                    GetinjectInputEvent(down, INJECT_INPUT_EVENT_MODE_WAIT_FOR_FINISH);
+                    GetinjectInputEvent(up, INJECT_INPUT_EVENT_MODE_WAIT_FOR_FINISH);
                     stopSelf();
                     remove_shutdown_time();
                 } else {

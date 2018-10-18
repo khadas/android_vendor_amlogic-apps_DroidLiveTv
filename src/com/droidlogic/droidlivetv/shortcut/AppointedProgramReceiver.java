@@ -39,6 +39,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.List;
 
+import java.lang.reflect.Method;
+
 import com.droidlogic.droidlivetv.R;
 
 public class AppointedProgramReceiver extends BroadcastReceiver implements OnClickListener, OnFocusChangeListener {
@@ -60,6 +62,16 @@ public class AppointedProgramReceiver extends BroadcastReceiver implements OnCli
     private PowerManager mPowerManager;
     private TvDataBaseManager mTvDataBaseManager;
 
+    private void wakeUp(long time) {
+         try {
+             Class<?> cls = Class.forName("android.os.PowerManager");
+             Method method = cls.getMethod("wakeup", long.class);
+             method.invoke(mPowerManager, time);
+         } catch(Exception e) {
+             e.printStackTrace();
+         }
+     }
+
     @Override
     public void onReceive(Context context, Intent intent) {
         mContext = context;
@@ -70,7 +82,7 @@ public class AppointedProgramReceiver extends BroadcastReceiver implements OnCli
         if (!isScreenOpen) {
             Log.d(TAG, "wakeUp the android." );
             long time = SystemClock.uptimeMillis();
-            mPowerManager.wakeUp(time);
+            wakeUp(time);
         }
         programid = intent.getLongExtra(DroidLogicTvUtils.EXTRA_PROGRAM_ID, -1L);
         channelid = intent.getLongExtra(DroidLogicTvUtils.EXTRA_CHANNEL_ID, -1L);
