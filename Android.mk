@@ -27,8 +27,8 @@ LOCAL_STATIC_JAVA_LIBRARIES := \
     android-support-annotations \
     android-support-v7-recyclerview \
 
-ifeq ($(shell test $(PLATFORM_SDK_VERSION) -ge 28 && echo OK),OK)
-#LOCAL_PRIVATE_PLATFORM_APIS := true
+ifndef PRODUCT_SHIPPING_API_LEVEL
+LOCAL_PRIVATE_PLATFORM_APIS := true
 endif
 
 ifeq ($(shell test $(PLATFORM_SDK_VERSION) -ge 26 && echo OK),OK)
