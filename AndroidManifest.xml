@@ -7,7 +7,7 @@
 
     <uses-sdk
         android:minSdkVersion="22"
-        android:targetSdkVersion="22" />
+        />
 
     <application
         android:launchMode="singleInstance"
