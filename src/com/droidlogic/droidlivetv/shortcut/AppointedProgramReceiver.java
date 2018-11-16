@@ -192,7 +192,7 @@ public class AppointedProgramReceiver extends BroadcastReceiver implements OnCli
         intent.putExtra(TvInputInfo.EXTRA_INPUT_ID, inputid);
         intent.putExtra(DroidLogicTvUtils.EXTRA_CHANNEL_ID, channelid);
         intent.putExtra(DroidLogicTvUtils.KEY_LIVETV_PROGRAM_APPOINTED, true);
-        DroidLogicTvUtils.setSearchType(mContext, tvtype);
+        //DroidLogicTvUtils.setSearchType(mContext, tvtype);
         cancelAppointedProgramAlarm(programid);
         mContext.startActivity(intent);
     }
