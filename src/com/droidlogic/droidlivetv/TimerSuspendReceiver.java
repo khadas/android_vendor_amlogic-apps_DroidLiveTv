@@ -18,16 +18,23 @@ import android.os.SystemProperties;
 import android.util.Log;
 
 import com.droidlogic.app.tv.DroidLogicTvUtils;
+import com.droidlogic.app.SystemControlManager;
 
 public class TimerSuspendReceiver extends BroadcastReceiver {
     private static final String TAG = "TimerSuspendReceiver";
 
     private Context mContext = null;
+    private SystemControlManager mSystemControlManager = null;
+
     @Override
     public void onReceive(Context context, Intent intent) {
         Log.d(TAG, "onReceive: " + intent);
 
         mContext = context;
+        mSystemControlManager = new SystemControlManager(mContext);
+        if (intent.getBooleanExtra(DroidLogicTvUtils.KEY_ENABLE_SUSPEND_TIMEOUT, false)) {
+            mSystemControlManager.setProperty("persist.tv.sleep_timer", 0 + "");//clear it as acted
+        }
         startSleepTimer(intent);
     }
 

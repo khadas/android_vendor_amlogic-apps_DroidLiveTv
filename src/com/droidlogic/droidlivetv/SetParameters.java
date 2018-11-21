@@ -188,18 +188,20 @@ public class SetParameters {
 
     public int getSleepTimerStatus () {
         String ret = "";
-        int time = mSystemControlManager.getPropertyInt("persist.sys.tv.sleep_timer", 0);
+        int time = mSystemControlManager.getPropertyInt("persist.tv.sleep_timer", 0);
         Log.d(TAG, "getSleepTimerStatus:" + time);
         return time;
     }
 
     public void setSleepTimer (int mode) {
         AlarmManager alarm = (AlarmManager)mContext.getSystemService(Context.ALARM_SERVICE);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(mContext, 0,
-                new Intent("droidlogic.intent.action.TIMER_SUSPEND"), 0);
+        Intent intent = new Intent("droidlogic.intent.action.TIMER_SUSPEND");
+        intent.addFlags(0x01000000/*Intent.FLAG_RECEIVER_INCLUDE_BACKGROUND*/);
+        intent.putExtra(DroidLogicTvUtils.KEY_ENABLE_SUSPEND_TIMEOUT, true);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(mContext, 0, intent, 0);
         alarm.cancel(pendingIntent);
 
-        mSystemControlManager.setProperty("persist.sys.tv.sleep_timer", mode+"");
+        mSystemControlManager.setProperty("persist.tv.sleep_timer", mode+"");
 
         long timeout = 0;
         if (mode == 0) {
