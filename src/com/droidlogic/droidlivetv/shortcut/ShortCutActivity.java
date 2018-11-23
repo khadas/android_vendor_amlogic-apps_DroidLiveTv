@@ -439,10 +439,9 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
             long tmp_time = (firstProgramTime) - ((firstProgramTime + time_offset) % DAY_TO_MS);
             int count = 0;
             while ((tmp_time <= lastProgramTime) && count < 10) {//show 1 + 8 days
-                count++;
                 if (currentDateIndex == -1) {
                     if (mTvTime.getTime() >= tmp_time && mTvTime.getTime() < tmp_time + DAY_TO_MS)
-                        currentDateIndex = count - 1;
+                        currentDateIndex = count;
                 }
                 ArrayMap<String, Object> item = new ArrayMap<String, Object>();
                 String[] dateAndTime = getDateAndTime(tmp_time);
@@ -455,9 +454,9 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
                 }
 
                 /*ignore the days before today*/
-                if (tmp_time < mTvTime.getTime())
+                if (tmp_time <= mTvTime.getTime())
                     continue;
-
+                count++;
                 list_date.add(item);
             }
         } else {

@@ -106,7 +106,10 @@ public class GuideListView extends ListView implements OnItemSelectedListener {
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         selectedPosition = position;
         if (view != null) {
-            if (hasFocus()) {
+            if (hasFocus() || parent.getId() == R.id.list_guide_channel) {
+                if (!hasFocus()) {
+                    requestFocus();
+                }
                 setItemTextColor(view, true);
             } else {
                 setItemTextColor(view, false);
