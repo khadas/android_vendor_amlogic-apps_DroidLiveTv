@@ -56,7 +56,7 @@ public class TimerSuspendService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        mSystemControlManager = new SystemControlManager(this);
+        mSystemControlManager = SystemControlManager.getInstance();
         this.mContext = this;
         initTimeSuspend();
         Log.d(TAG, "onCreate");

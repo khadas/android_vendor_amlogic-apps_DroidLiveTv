@@ -61,7 +61,7 @@ public class SetParameters {
         this.mBundle = bundle;
         this.mDeviceId = bundle.getInt("deviceid", -1);
         mTvDataBaseManager = new TvDataBaseManager(mContext);
-        mSystemControlManager = new SystemControlManager(mContext);
+        mSystemControlManager = SystemControlManager.getInstance();
         mTvControlManager = TvControlManager.getInstance();
         mResources = mContext.getResources();
         setCurrentChannelData(bundle);

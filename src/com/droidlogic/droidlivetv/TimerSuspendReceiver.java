@@ -31,7 +31,7 @@ public class TimerSuspendReceiver extends BroadcastReceiver {
         Log.d(TAG, "onReceive: " + intent);
 
         mContext = context;
-        mSystemControlManager = new SystemControlManager(mContext);
+        mSystemControlManager = SystemControlManager.getInstance();
         if (intent.getBooleanExtra(DroidLogicTvUtils.KEY_ENABLE_SUSPEND_TIMEOUT, false)) {
             mSystemControlManager.setProperty("persist.tv.sleep_timer", 0 + "");//clear it as acted
         }
