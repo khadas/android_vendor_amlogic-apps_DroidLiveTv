@@ -37,6 +37,7 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.Message;
 import android.text.TextUtils;
 import android.util.Log;
@@ -106,11 +107,13 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
     private int currentDateIndex = -1;
     private int currentProgramIndex = -1;
     private TvTime mTvTime = null;
+    private final int INTERVAL = 20;//100MS
 
     private int mDeviceId = -1;
     private long mCurrentChannelId = -1;
     private String mCurrentInputId = null;
     private int mCurrentKeyCode = -1;
+    private boolean mHandleUpdate = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -157,12 +160,15 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
             getContentResolver().unregisterContentObserver(mChannelObserver);
             mChannelObserver = null;
         }
+        handler.removeCallbacksAndMessages(null);
+        mThreadHandler.removeCallbacksAndMessages(null);
         super.onStop();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        Log.d(TAG, "------onDestroy");
     }
 
     @Override
@@ -241,26 +247,55 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
                 case MSG_UPDATE_PROGRAM:
                     showProgramList();
                     break;
-                case MSG_LOAD_CHANNELS:
-                    new Thread(getChannelRunnable).start();
-                    break;
-                case MSG_LOAD_DATE:
-                    if (msg.arg1 != -1) {
-                        currentDateIndex = -1;
-                        currentProgramIndex = -1;
-                    }
-                    Log.d(TAG, "current Date:" + currentDateIndex);
-                    new Thread(getDateRunnable).start();
-                    break;
-                case MSG_LOAD_PROGRAM:
-                    Log.d(TAG, "current Program:" + currentProgramIndex);
-                    new Thread(getProgramRunnable).start();
-                    break;
                 default:
                     break;
             }
         }
     };
+
+    private HandlerThread mHandlerThread;
+    private Handler  mThreadHandler;
+
+    private void initHandlerThread() {
+        mHandlerThread = new HandlerThread("check-message-coming");
+        mHandlerThread.start();
+        mThreadHandler = new Handler(mHandlerThread.getLooper()) {
+            @Override
+            public void handleMessage(Message msg) {
+                switch (msg.what) {
+                    case MSG_LOAD_CHANNELS:
+                        try {
+                            loadChannelList();
+                        } catch (RuntimeException e) {
+                            e.printStackTrace();
+                        }
+                        break;
+                    case MSG_LOAD_DATE:
+                        if (msg.arg1 != -1) {
+                            currentDateIndex = -1;
+                            currentProgramIndex = -1;
+                        }
+                        Log.d(TAG, "current Date:" + currentDateIndex);
+                        try {
+                            loadDateList();
+                        } catch (RuntimeException e) {
+                            e.printStackTrace();
+                        }
+                        break;
+                    case MSG_LOAD_PROGRAM:
+                        Log.d(TAG, "current Program:" + currentProgramIndex);
+                        try {
+                            loadProgramList();
+                        } catch (RuntimeException e) {
+                            e.printStackTrace();
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            }
+        };
+    }
 
     BroadcastReceiver mReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
@@ -284,42 +319,6 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
         }
     };
 
-    private Runnable getChannelRunnable = new Runnable() {
-        @Override
-        public void run() {
-            try {
-                handler.removeMessages(MSG_LOAD_CHANNELS);
-                loadChannelList();
-            } catch (RuntimeException e) {
-                e.printStackTrace();
-            }
-        }
-    };
-
-    private Runnable getDateRunnable = new Runnable() {
-        @Override
-        public void run() {
-            try {
-                handler.removeMessages(MSG_LOAD_DATE);
-                loadDateList();
-            } catch (RuntimeException e) {
-                e.printStackTrace();
-            }
-        }
-    };
-
-    private Runnable getProgramRunnable = new Runnable() {
-        @Override
-        public void run() {
-            try {
-                handler.removeMessages(MSG_LOAD_PROGRAM);
-                loadProgramList();
-            } catch (RuntimeException e) {
-                e.printStackTrace();
-            }
-        }
-    };
-
     private void setGuideView() {
         mTvTime = new TvTime(this);
 
@@ -338,6 +337,7 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
 
         lv_program.setListItemSelectedListener(this);
         lv_program.setOnItemClickListener(this);
+        initHandlerThread();
 
         if (mProgramObserver == null)
             mProgramObserver = new ProgramObserver();
@@ -347,7 +347,7 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
         getContentResolver().registerContentObserver(TvContract.Programs.CONTENT_URI, true, mProgramObserver);
         getContentResolver().registerContentObserver(TvContract.Channels.CONTENT_URI, true, mChannelObserver);
 
-        handler.sendEmptyMessage(MSG_LOAD_CHANNELS);
+        mThreadHandler.sendEmptyMessage(MSG_LOAD_CHANNELS);
     }
 
     private void loadDateTime() {
@@ -563,6 +563,7 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
         } else {
             ((GuideAdapter)lv_program.getAdapter()).refill(list);
         }
+        mHandleUpdate = false;
     }
 
 
@@ -609,11 +610,16 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
                 lv_date.setAdapter(null);
                 lv_program.setAdapter(null);
                 currentChannelIndex = position;
-                handler.sendEmptyMessage(MSG_LOAD_DATE);
+                mThreadHandler.removeMessages(MSG_LOAD_DATE);
+                mThreadHandler.removeMessages(MSG_LOAD_PROGRAM);
+                mThreadHandler.sendEmptyMessageDelayed(MSG_LOAD_DATE, INTERVAL);
+                mHandleUpdate = true;
                 break;
             case R.id.list_guide_week:
                 currentDateIndex = position;
-                handler.sendEmptyMessage(MSG_LOAD_PROGRAM);
+                mThreadHandler.removeMessages(MSG_LOAD_PROGRAM);
+                mThreadHandler.sendEmptyMessageDelayed(MSG_LOAD_PROGRAM, INTERVAL);
+                mHandleUpdate = true;
                 break;
             case R.id.list_guide_programs:
                 if (position < list_program.size()) {
@@ -716,21 +722,24 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
 
     private final class ProgramObserver extends ContentObserver {
         public ProgramObserver() {
-            super(new Handler());
+            super(mThreadHandler/*new Handler()*/);
         }
 
         @Override
         public void onChange(boolean selfChange, Uri uri) {
+            if (mHandleUpdate) {
+                return;
+            }
             if (currentChannelIndex != -1) {
                 ChannelInfo currentChannel = channelInfoList.get(currentChannelIndex);
                 Program program = mTvDataBaseManager.getProgram(uri);
                 if (program != null &&
                         program.getChannelId() == currentChannel.getId()) {
                     Log.d(TAG, "current channel update");
-                    handler.removeMessages(MSG_LOAD_DATE);
-                    handler.removeMessages(MSG_LOAD_PROGRAM);
-                    Message msg = handler.obtainMessage(MSG_LOAD_DATE, -1, 0);
-                    handler.sendMessageDelayed(msg, 500);
+                    mThreadHandler.removeMessages(MSG_LOAD_DATE);
+                    mThreadHandler.removeMessages(MSG_LOAD_PROGRAM);
+                    Message msg = mThreadHandler.obtainMessage(MSG_LOAD_DATE, -1, 0);
+                    mThreadHandler.sendMessageDelayed(msg, 500);
                 }
             }
         }
@@ -745,17 +754,20 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
 
     private final class ChannelObserver extends ContentObserver {
         public ChannelObserver() {
-            super(new Handler());
+            super(mThreadHandler/*new Handler()*/);
         }
 
         @Override
         public void onChange(boolean selfChange, Uri uri) {
+            if (mHandleUpdate) {
+                return;
+            }
             if (DroidLogicTvUtils.matchsWhich(uri) == DroidLogicTvUtils.MATCH_CHANNEL) {
                 Log.d(TAG, "channel changed =" + uri);
-                handler.removeMessages(MSG_LOAD_CHANNELS);
-                handler.removeMessages(MSG_LOAD_DATE);
-                handler.removeMessages(MSG_LOAD_PROGRAM);
-                handler.sendEmptyMessageDelayed(MSG_LOAD_CHANNELS, 500);
+                mThreadHandler.removeMessages(MSG_LOAD_CHANNELS);
+                mThreadHandler.removeMessages(MSG_LOAD_DATE);
+                mThreadHandler.removeMessages(MSG_LOAD_PROGRAM);
+                mThreadHandler.sendEmptyMessageDelayed(MSG_LOAD_CHANNELS, 500);
             }
         }
 
