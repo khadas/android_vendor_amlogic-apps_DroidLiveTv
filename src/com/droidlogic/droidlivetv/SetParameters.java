@@ -19,6 +19,7 @@ import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
 import android.media.tv.TvContract;
+import android.provider.Settings;
 
 import com.droidlogic.app.tv.TvControlManager;
 import com.droidlogic.app.SystemControlManager;
@@ -55,6 +56,14 @@ public class SetParameters {
     public static final int STATUS_MOVIE    = 4;
     public static final int STATUS_MONITOR  = 5;
     public static final int STATUS_USER     = 6;
+
+    public static final String SOUND_EFFECT_SOUND_MODE            = "sound_effect_sound_mode";
+    public static final String SOUND_EFFECT_SOUND_MODE_TYPE       = "sound_effect_sound_mode_type";
+    public static final String SOUND_EFFECT_SOUND_MODE_TYPE_DAP   = "type_dap";
+    public static final String SOUND_EFFECT_SOUND_MODE_TYPE_EQ    = "type_eq";
+    public static final String SOUND_EFFECT_SOUND_MODE_DAP_VALUE  = "sound_effect_sound_mode_dap";
+    public static final String SOUND_EFFECT_SOUND_MODE_EQ_VALUE   = "sound_effect_sound_mode_eq";
+    public static final int MODE_STANDARD = 0;
 
     public SetParameters(Context context, Bundle bundle) {
         this.mContext = context;
@@ -132,31 +141,29 @@ public class SetParameters {
     }
 
     public  int getSoundModeStatus () {
-        int itemPosition = mTvControlManager.GetCurAudioSoundMode();
+        int itemPosition = -1;
+        String soundmodetype = Settings.Global.getString(mContext.getContentResolver(), SOUND_EFFECT_SOUND_MODE_TYPE);
+        Log.d(TAG, "getSoundModeStatus soundmodetype = " + soundmodetype);
+        if (soundmodetype == null || SOUND_EFFECT_SOUND_MODE_TYPE_EQ.equals(soundmodetype)) {
+            itemPosition = Settings.Global.getInt(mContext.getContentResolver(), SOUND_EFFECT_SOUND_MODE_EQ_VALUE, MODE_STANDARD);
+        } else if ((SOUND_EFFECT_SOUND_MODE_TYPE_DAP.equals(soundmodetype))) {
+            itemPosition = Settings.Global.getInt(mContext.getContentResolver(), SOUND_EFFECT_SOUND_MODE_DAP_VALUE, MODE_STANDARD);
+        } else {
+            itemPosition = Settings.Global.getInt(mContext.getContentResolver(), SOUND_EFFECT_SOUND_MODE, MODE_STANDARD);
+        }
         Log.d(TAG, "getSoundModeStatus:" + itemPosition);
         return itemPosition;
     }
 
     public void setSoundMode (int mode) {
         Log.d(TAG, "setSoundMode:" + mode);
-        if (mode == 0) {
-            mTvControlManager.SetAudioSoundMode(TvControlManager.Sound_Mode.SOUND_MODE_STD);
-            mTvControlManager.SaveCurAudioSoundMode(TvControlManager.Sound_Mode.SOUND_MODE_STD.toInt());
-        } else if (mode == 1) {
-            mTvControlManager.SetAudioSoundMode(TvControlManager.Sound_Mode.SOUND_MODE_MUSIC);
-            mTvControlManager.SaveCurAudioSoundMode(TvControlManager.Sound_Mode.SOUND_MODE_MUSIC.toInt());
-        } else if (mode == 2) {
-            mTvControlManager.SetAudioSoundMode(TvControlManager.Sound_Mode.SOUND_MODE_NEWS);
-            mTvControlManager.SaveCurAudioSoundMode(TvControlManager.Sound_Mode.SOUND_MODE_NEWS.toInt());
-        } else if (mode == 3) {
-            mTvControlManager.SetAudioSoundMode(TvControlManager.Sound_Mode.SOUND_MODE_THEATER);
-            mTvControlManager.SaveCurAudioSoundMode(TvControlManager.Sound_Mode.SOUND_MODE_THEATER.toInt());
-        } else if (mode == 4) {
-            mTvControlManager.SetAudioSoundMode(TvControlManager.Sound_Mode.SOUND_MODE_GAME);
-            mTvControlManager.SaveCurAudioSoundMode(TvControlManager.Sound_Mode.SOUND_MODE_GAME.toInt());
-        } else if (mode == 5) {
-            mTvControlManager.SetAudioSoundMode(TvControlManager.Sound_Mode.SOUND_MODE_USER);
-            mTvControlManager.SaveCurAudioSoundMode(TvControlManager.Sound_Mode.SOUND_MODE_USER.toInt());
+        String soundmodetype = Settings.Global.getString(mContext.getContentResolver(), SOUND_EFFECT_SOUND_MODE_TYPE);
+        if (soundmodetype == null || SOUND_EFFECT_SOUND_MODE_TYPE_EQ.equals(soundmodetype)) {
+            Settings.Global.putInt(mContext.getContentResolver(), SOUND_EFFECT_SOUND_MODE_EQ_VALUE, mode);
+        } else if ((SOUND_EFFECT_SOUND_MODE_TYPE_DAP.equals(soundmodetype))) {
+            Settings.Global.putInt(mContext.getContentResolver(), SOUND_EFFECT_SOUND_MODE_DAP_VALUE, mode);
+        } else {
+            Settings.Global.putInt(mContext.getContentResolver(), SOUND_EFFECT_SOUND_MODE, mode);
         }
     }
 
