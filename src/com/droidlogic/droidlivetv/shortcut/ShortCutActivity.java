@@ -66,6 +66,8 @@ import java.util.List;
 import java.util.TimeZone;
 import java.text.SimpleDateFormat;
 import java.util.Iterator;
+import java.util.Comparator;
+import java.util.Collections;
 
 public class ShortCutActivity extends Activity implements ListItemSelectedListener, OnItemClickListener {
     private static final String TAG = "ShortCutActivity";
@@ -319,6 +321,55 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
         }
     };
 
+    private class CompareDisplayNumber implements Comparator<ChannelInfo> {
+
+        @Override
+        public int compare(ChannelInfo o1, ChannelInfo o2) {
+            int result = compareString(o1.getDisplayNumber(), o2.getDisplayNumber());
+            return result;
+        }
+    }
+
+    private int compareString(String a, String b) {
+        if (a == null) {
+            return b == null ? 0 : -1;
+        }
+        if (b == null) {
+            return 1;
+        }
+
+        int[] disnumbera = getMajorAndMinor(a);
+        int[] disnumberb = getMajorAndMinor(b);
+        if (disnumbera[0] != disnumberb[0]) {
+            return (disnumbera[0] - disnumberb[0]) > 0 ? 1 : -1;
+        } else if (disnumbera[1] != disnumberb[1]) {
+            return (disnumbera[1] - disnumberb[1]) > 0 ? 1 : -1;
+        }
+        return 0;
+    }
+
+    private int[] getMajorAndMinor(String disnumber) {
+        int[] result = {-1, -1};//major, minor
+        String[] splitone = (disnumber != null ? disnumber.split("-") : null);
+        if (splitone != null && splitone.length > 0) {
+            int length = 2;
+            if (splitone.length <= 2) {
+                length = splitone.length;
+            } else {
+                Log.d(TAG, "informal disnumber");
+                return result;
+            }
+            for (int i = 0; i < length; i++) {
+                try {
+                   result[i] = Integer.valueOf(splitone[i]);
+                } catch (NumberFormatException e) {
+                    Log.d(TAG, splitone[i] + " not integer:" + e.getMessage());
+                }
+            }
+        }
+        return result;
+    }
+
     private void setGuideView() {
         mTvTime = new TvTime(this);
 
@@ -365,8 +416,8 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
                 if (info != null && info.isDigitalChannel()) {
                     ArrayMap<String, Object> item = new ArrayMap<String, Object>();
 
-                    item.put(GuideListView.ITEM_1, info.getNumber() + "  " + info.getDisplayNameLocal());
-                    item.put(GuideListView.ITEM_2, info.getNumber());
+                    item.put(GuideListView.ITEM_1, info.getDisplayNumber() + "  " + info.getDisplayNameLocal());
+                    item.put(GuideListView.ITEM_2, info.getDisplayNumber());
                     if (ChannelInfo.isRadioChannel(info)) {
                         item.put(GuideListView.ITEM_3, true);
                     } else {
@@ -393,6 +444,9 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
 
         channelInfoList = mTvDataBaseManager.getChannelList(mCurrentInputId, Channels.SERVICE_TYPE_AUDIO_VIDEO, true);
         channelInfoList.addAll(mTvDataBaseManager.getChannelList(mCurrentInputId, Channels.SERVICE_TYPE_AUDIO, true));
+        if (channelInfoList != null && channelInfoList.size() > 0) {
+            Collections.sort(channelInfoList, new CompareDisplayNumber());
+        }
         Iterator it = channelInfoList.iterator();
         ChannelInfo channel = null;
         while (it.hasNext()) {
@@ -778,5 +832,4 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
             return super.releaseContentObserver();
         }*/
     }
-
 }
