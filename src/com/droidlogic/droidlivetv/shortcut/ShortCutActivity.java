@@ -699,7 +699,6 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
     }
 
     private void sendSwitchChannelBroadcast(int position) {
-        int channelIndex = (int)list_channels.get(position).get(GuideListView.ITEM_2);
         boolean isRadio = (boolean)list_channels.get(position).get(GuideListView.ITEM_3);
         ChannelInfo currentChannel = channelInfoList.get(currentChannelIndex);
         String inputId = currentChannel.getInputId();
