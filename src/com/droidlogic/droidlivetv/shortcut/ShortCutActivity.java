@@ -63,6 +63,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Arrays;
 import java.util.TimeZone;
 import java.text.SimpleDateFormat;
 import java.util.Iterator;
@@ -413,10 +414,11 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
         if (channelInfoList.size() > 0) {
             for (int i = 0 ; i < channelInfoList.size(); i++) {
                 ChannelInfo info = channelInfoList.get(i);
-                if (info != null && info.isDigitalChannel()) {
+                if (info != null && !info.isAnalogChannel()) {
                     ArrayMap<String, Object> item = new ArrayMap<String, Object>();
-
-                    item.put(GuideListView.ITEM_1, info.getDisplayNumber() + "  " + info.getDisplayNameLocal());
+                    String localName = info.getDisplayNameLocal();
+                    String displayName = info.getDisplayName();
+                    item.put(GuideListView.ITEM_1, info.getDisplayNumber() + "  " + (!TextUtils.isEmpty(localName) ? localName : displayName));
                     item.put(GuideListView.ITEM_2, info.getDisplayNumber());
                     if (ChannelInfo.isRadioChannel(info)) {
                         item.put(GuideListView.ITEM_3, true);
@@ -441,9 +443,15 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
         }
 
         list_channels.clear();
+        String searchedId = DroidLogicTvUtils.getSearchInputId(this);
+        if (searchedId != null && searchedId.startsWith("com.droidlogic.tvinput")) {
+            channelInfoList = mTvDataBaseManager.getChannelList(mCurrentInputId, Channels.SERVICE_TYPE_AUDIO_VIDEO, true);
+            channelInfoList.addAll(mTvDataBaseManager.getChannelList(mCurrentInputId, Channels.SERVICE_TYPE_AUDIO, true));
+        } else {
+            channelInfoList = mTvDataBaseManager.getChannelList(mCurrentInputId, Channels.SERVICE_TYPE_AUDIO_VIDEO, false);
+            channelInfoList.addAll(mTvDataBaseManager.getChannelList(mCurrentInputId, Channels.SERVICE_TYPE_AUDIO, false));
+        }
 
-        channelInfoList = mTvDataBaseManager.getChannelList(mCurrentInputId, Channels.SERVICE_TYPE_AUDIO_VIDEO, true);
-        channelInfoList.addAll(mTvDataBaseManager.getChannelList(mCurrentInputId, Channels.SERVICE_TYPE_AUDIO, true));
         if (channelInfoList != null && channelInfoList.size() > 0) {
             Collections.sort(channelInfoList, new CompareDisplayNumber());
         }
@@ -451,12 +459,13 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
         ChannelInfo channel = null;
         while (it.hasNext()) {
             channel = (ChannelInfo)it.next();
-            if (channel != null && !channel.isDigitalChannel()) {
+            if (channel != null && channel.isAnalogChannel()) {
                 it.remove();
             }
         }
 
         list_channels = getDTVChannelList(channelInfoList);
+        Log.d(TAG, "loadChannelList list_channels.size() = " + list_channels.size());
 
         handler.sendEmptyMessage(MSG_UPDATE_CHANNELS);
     }
@@ -492,6 +501,8 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
 
             long tmp_time = (firstProgramTime) - ((firstProgramTime + time_offset) % DAY_TO_MS);
             int count = 0;
+            Log.d(TAG, "firstProgramTime = " + Arrays.toString(getDateAndTime(firstProgramTime)) +
+                    ", lastProgramTime = " + Arrays.toString(getDateAndTime(lastProgramTime)));
             while ((tmp_time <= lastProgramTime) && count < 10) {//show 1 + 8 days
                 if (currentDateIndex == -1) {
                     if (mTvTime.getTime() >= tmp_time && mTvTime.getTime() < tmp_time + DAY_TO_MS)
@@ -508,8 +519,9 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
                 }
 
                 /*ignore the days before today*/
-                if (tmp_time <= mTvTime.getTime())
+                if (tmp_time <= mTvTime.getTime()) {
                     continue;
+                }
                 count++;
                 list_date.add(item);
             }
