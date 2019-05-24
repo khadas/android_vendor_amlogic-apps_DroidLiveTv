@@ -445,11 +445,11 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
         list_channels.clear();
         String searchedId = DroidLogicTvUtils.getSearchInputId(this);
         if (searchedId != null && searchedId.startsWith("com.droidlogic.tvinput")) {
-            channelInfoList = mTvDataBaseManager.getChannelList(mCurrentInputId, Channels.SERVICE_TYPE_AUDIO_VIDEO, true);
-            channelInfoList.addAll(mTvDataBaseManager.getChannelList(mCurrentInputId, Channels.SERVICE_TYPE_AUDIO, true));
+            channelInfoList = mTvDataBaseManager.getChannelList(mCurrentInputId, Channels.SERVICE_TYPE_AUDIO_VIDEO, true, false);//hide channel is not needed
+            channelInfoList.addAll(mTvDataBaseManager.getChannelList(mCurrentInputId, Channels.SERVICE_TYPE_AUDIO, true, false));
         } else {
-            channelInfoList = mTvDataBaseManager.getChannelList(mCurrentInputId, Channels.SERVICE_TYPE_AUDIO_VIDEO, false);
-            channelInfoList.addAll(mTvDataBaseManager.getChannelList(mCurrentInputId, Channels.SERVICE_TYPE_AUDIO, false));
+            channelInfoList = mTvDataBaseManager.getChannelList(mCurrentInputId, Channels.SERVICE_TYPE_AUDIO_VIDEO, false, false);
+            channelInfoList.addAll(mTvDataBaseManager.getChannelList(mCurrentInputId, Channels.SERVICE_TYPE_AUDIO, false, false));
         }
 
         if (channelInfoList != null && channelInfoList.size() > 0) {
