@@ -582,7 +582,20 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
                 item_program.put(GuideListView.ITEM_1, dateAndTime[3] + ":" + dateAndTime[4]
                                  + "~" + endTime[3] + ":" + endTime[4]);
                 item_program.put(GuideListView.ITEM_2, program.getTitle());
-                item_program.put(GuideListView.ITEM_3, program.getDescription());
+                String descrip = program.getDescription();
+                String longDescrip = program.getLongDescription();
+                String des = null;
+                if (!TextUtils.isEmpty(descrip)) {
+                    if (!TextUtils.isEmpty(longDescrip)) {
+                        des = descrip + "\n" + longDescrip;
+                    } else {
+                        des = descrip;
+                    }
+                } else if (TextUtils.isEmpty(descrip)) {
+                    des = longDescrip;
+                }
+                //Log.d(TAG, "loadProgramList descrip = " + descrip + "\n" + ", longDescrip = " + longDescrip);
+                item_program.put(GuideListView.ITEM_3, des);
                 item_program.put(GuideListView.ITEM_4, Long.toString(program.getId()));
 
                 if (mTvTime.getTime() >= program.getStartTimeUtcMillis() && mTvTime.getTime() <= program.getEndTimeUtcMillis()) {
