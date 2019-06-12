@@ -57,4 +57,9 @@
 	<string name="ok">确定</string>
     <string name="switch_program_propmt">秒后自动切换</string>
     <string name="watch_program">观看预约的节目: </string>
+    <string name="program_event_name">节目名称: </string>
+    <string name="program_genre">类型: </string>
+    <string name="program_rating">等级: </string>
+    <string name="program_short">描述: </string>
+    <string name="program_extend">信息: </string>
 </resources>

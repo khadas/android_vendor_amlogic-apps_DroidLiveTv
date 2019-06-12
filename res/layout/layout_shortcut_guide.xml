@@ -83,9 +83,10 @@
                 android:layout_width="380dp"
                 android:layout_height="wrap_content"
                 android:nextFocusLeft="@+id/list_guide_week"
+                android:nextFocusRight="@+id/program_event"
                 android:listSelector="@drawable/item_background"
                 />
-            <RelativeLayout
+            <!-- <RelativeLayout
                 android:orientation="vertical"
                 android:layout_width="220dp"
                 android:layout_height="match_parent"
@@ -95,6 +96,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_centerInParent="true"
+                    android:nextFocusLeft="@+id/list_guide_programs"
+                    android:focusable ="true"
                     android:paddingLeft="10dp"
                     android:paddingRight="10dp"
                     android:scrollbars="vertical"
@@ -103,7 +106,73 @@
                     android:textSize="22sp"
                     android:textColor="@color/color_text_blue_1"
                     />
-            </RelativeLayout>
+            </RelativeLayout> -->
+            <ScrollView
+                android:layout_width="200dp"
+                android:layout_height="match_parent"
+                android:background="@drawable/item_background">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/program_event"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:nextFocusLeft="@+id/list_guide_programs"
+                        android:layout_marginTop="5dp"
+                        android:layout_marginBottom="5dp"
+                        android:textSize="16sp"
+                        android:textColor="@color/color_text_blue_1"
+                        android:text="@string/no_information" />
+
+                    <TextView
+                        android:id="@+id/program_genre"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:nextFocusLeft="@+id/list_guide_programs"
+                        android:layout_marginTop="5dp"
+                        android:layout_marginBottom="5dp"
+                        android:textSize="16sp"
+                        android:textColor="@color/color_text_blue_1"
+                        android:text="@string/no_information" />
+
+                    <TextView
+                        android:id="@+id/program_rating"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:nextFocusLeft="@+id/list_guide_programs"
+                        android:layout_marginTop="5dp"
+                        android:layout_marginBottom="5dp"
+                        android:textSize="16sp"
+                        android:textColor="@color/color_text_blue_1"
+                        android:text="@string/no_information" />
+
+                    <TextView
+                        android:id="@+id/program_short"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:nextFocusLeft="@+id/list_guide_programs"
+                        android:layout_marginTop="5dp"
+                        android:layout_marginBottom="5dp"
+                        android:textSize="16sp"
+                        android:textColor="@color/color_text_blue_1"
+                        android:text="@string/no_information" />
+
+                    <TextView
+                        android:id="@+id/program_extend"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:nextFocusLeft="@+id/list_guide_programs"
+                        android:layout_marginTop="5dp"
+                        android:layout_marginBottom="5dp"
+                        android:textSize="16sp"
+                        android:textColor="@color/color_text_blue_1"
+                        android:text="@string/no_information" />
+                </LinearLayout>
+            </ScrollView>
         </LinearLayout>
     </LinearLayout>
 </RelativeLayout>

@@ -64,4 +64,9 @@
     <string name="ok">OK</string>
     <string name="switch_program_propmt">seconds later auto switch</string>
     <string name="watch_program">Watch appointed program: </string>
+    <string name="program_event_name">Event Name: </string>
+    <string name="program_genre">Genre: </string>
+    <string name="program_rating">Rating: </string>
+    <string name="program_short">Description: </string>
+    <string name="program_extend">Extend: </string>
 </resources>

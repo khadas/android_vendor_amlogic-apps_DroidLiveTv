@@ -56,6 +56,7 @@ import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.media.tv.TvContentRating;
 
 import com.droidlogic.droidlivetv.R;
 
@@ -69,6 +70,10 @@ import java.text.SimpleDateFormat;
 import java.util.Iterator;
 import java.util.Comparator;
 import java.util.Collections;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class ShortCutActivity extends Activity implements ListItemSelectedListener, OnItemClickListener {
     private static final String TAG = "ShortCutActivity";
@@ -99,6 +104,10 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
     private GuideListView lv_program;
     private TextView tx_date;
     private TextView tx_program_description;
+    private TextView tx_program_event_name;
+    private TextView tx_program_genre;
+    private TextView tx_program_rating;
+    private TextView tx_program_extend;
     private ArrayList<ChannelInfo> channelInfoList;
     private ArrayList<ArrayMap<String, Object>> list_channels  = new ArrayList<ArrayMap<String, Object>>();
     private ArrayList<ArrayMap<String, Object>> list_date = new ArrayList<ArrayMap<String, Object>>();
@@ -376,7 +385,12 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
 
         loadDateTime();
 
-        tx_program_description = (TextView)findViewById(R.id.guide_details_content);
+        tx_program_description = (TextView)findViewById(R.id.program_short/*guide_details_content*/);
+        tx_program_event_name = (TextView)findViewById(R.id.program_event);
+        tx_program_genre = (TextView)findViewById(R.id.program_genre);
+        tx_program_rating = (TextView)findViewById(R.id.program_rating);
+        tx_program_extend = (TextView)findViewById(R.id.program_extend);
+        //tx_program_event_name.setVisibility(View.GONE);//add if needed
 
         lv_channel = (GuideListView)findViewById(R.id.list_guide_channel);
         lv_date = (GuideListView)findViewById(R.id.list_guide_week);
@@ -584,8 +598,41 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
                 item_program.put(GuideListView.ITEM_2, program.getTitle());
                 String descrip = program.getDescription();
                 String longDescrip = program.getLongDescription();
-                String des = null;
-                if (!TextUtils.isEmpty(descrip)) {
+                String genresStr = null;
+                String ratingsStr = null;
+                String[] genres = program.getCanonicalGenres();
+                TvContentRating[] ratings = program.getContentRatings();
+                if (genres != null && genres.length > 0) {
+                    for (String sub : genres) {
+                        if (genresStr == null) {
+                            genresStr = sub;
+                        } else {
+                            genresStr = genresStr + " " + sub;
+                        }
+                    }
+                }
+                if (ratings != null && ratings.length > 0) {
+                    for (TvContentRating sub : ratings) {
+                        if (ratingsStr == null) {
+                            ratingsStr = sub.getMainRating();
+                        } else {
+                            ratingsStr = ratingsStr + " " + sub.getMainRating();
+                        }
+                    }
+                }
+                JSONObject jsonObj = new JSONObject();
+                try {
+                    jsonObj.put("program_event", program.getTitle());
+                    jsonObj.put("program_genre", genresStr != null ? genresStr : "");
+                    jsonObj.put("program_rating", ratingsStr != null ? ratingsStr : "");
+                    jsonObj.put("program_short", program.getDescription());
+                    jsonObj.put("program_extend", program.getLongDescription());
+                } catch (JSONException e) {
+                    Log.e(TAG, "load Program JSONException = " + e.getMessage());
+                    e.printStackTrace();
+                }
+                String des = jsonObj.toString();
+                /*if (!TextUtils.isEmpty(descrip)) {
                     if (!TextUtils.isEmpty(longDescrip)) {
                         des = descrip + "\n" + longDescrip;
                     } else {
@@ -593,7 +640,7 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
                     }
                 } else if (TextUtils.isEmpty(descrip)) {
                     des = longDescrip;
-                }
+                }*/
                 //Log.d(TAG, "loadProgramList descrip = " + descrip + "\n" + ", longDescrip = " + longDescrip);
                 item_program.put(GuideListView.ITEM_3, des);
                 item_program.put(GuideListView.ITEM_4, Long.toString(program.getId()));
@@ -703,11 +750,61 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
             case R.id.list_guide_programs:
                 if (position < list_program.size()) {
                     currentProgramIndex = position;
-                    Object description = list_program.get(position).get(GuideListView.ITEM_3);
-                    if (description != null) {
+                    String jsonObjStr = (String)list_program.get(position).get(GuideListView.ITEM_3);
+                    /*if (description != null) {
                         tx_program_description.setText(description.toString());
                     } else {
                         tx_program_description.setText(mResources.getString(R.string.no_information));
+                    }*/
+                    String program_event = null;
+                    String program_genre = null;
+                    String program_rating = null;
+                    String program_short = null;
+                    String program_extend = null;
+                    if (TextUtils.isEmpty(jsonObjStr)) {
+                        tx_program_event_name.setText(getString(R.string.program_event_name) + "\n" + getString(R.string.no_information));
+                        tx_program_genre.setText(getString(R.string.program_genre) + "\n" + getString(R.string.no_information));
+                        tx_program_rating.setText(getString(R.string.program_rating) + "\n" + getString(R.string.no_information));
+                        tx_program_description.setText(getString(R.string.program_short) + "\n" + getString(R.string.no_information));
+                        tx_program_extend.setText(getString(R.string.program_extend) + "\n" + getString(R.string.no_information));
+                    } else {
+                        try {
+                            JSONObject jsonObj = new JSONObject(jsonObjStr.toString());
+                            program_event = jsonObj.getString("program_event");
+                            program_genre = jsonObj.getString("program_genre");
+                            program_rating = jsonObj.getString("program_rating");
+                            program_short = jsonObj.getString("program_short");
+                            program_extend = jsonObj.getString("program_extend");
+                        } catch (JSONException e) {
+                            Log.e(TAG, "onListItemSelected list_guide_programs JSONException = " + e.getMessage());
+                            e.printStackTrace();
+                        } finally {
+                            if (TextUtils.isEmpty(program_event)) {
+                                tx_program_event_name.setText(getString(R.string.program_event_name) + "\n" + getString(R.string.no_information));
+                            } else {
+                                tx_program_event_name.setText(getString(R.string.program_event_name) + "\n" + program_event);
+                            }
+                            if (TextUtils.isEmpty(program_genre)) {
+                                tx_program_genre.setText(getString(R.string.program_genre) + "\n" + getString(R.string.no_information));
+                            } else {
+                                tx_program_genre.setText(getString(R.string.program_genre) + "\n" + program_genre);
+                            }
+                            if (TextUtils.isEmpty(program_rating)) {
+                                tx_program_rating.setText(getString(R.string.program_rating) + "\n" + getString(R.string.no_information));
+                            } else {
+                                tx_program_rating.setText(getString(R.string.program_rating) + "\n" + program_rating);
+                            }
+                            if (TextUtils.isEmpty(program_short)) {
+                                tx_program_description.setText(getString(R.string.program_short) + "\n" + getString(R.string.no_information));
+                            } else {
+                                tx_program_description.setText(getString(R.string.program_short) + "\n" + program_short);
+                            }
+                            if (TextUtils.isEmpty(program_extend)) {
+                                tx_program_extend.setText(getString(R.string.program_extend) + "\n" + getString(R.string.no_information));
+                            } else {
+                                tx_program_extend.setText(getString(R.string.program_extend) + "\n" + program_extend);
+                            }
+                        }
                     }
                 }
                 break;
