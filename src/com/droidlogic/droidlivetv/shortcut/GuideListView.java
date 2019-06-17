@@ -62,6 +62,7 @@ public class GuideListView extends ListView implements OnItemSelectedListener {
     }
 
     public boolean dispatchKeyEvent (KeyEvent event) {
+        //Log.d(TAG, "dispatchKeyEvent event = " + event);
         if (event.getAction() == KeyEvent.ACTION_DOWN) {
             switch (event.getKeyCode()) {
                 case KeyEvent.KEYCODE_DPAD_UP:

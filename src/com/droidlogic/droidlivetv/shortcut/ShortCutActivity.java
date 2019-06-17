@@ -21,6 +21,7 @@ import com.droidlogic.app.tv.TvDataBaseManager;
 import com.droidlogic.app.tv.TvTime;
 import com.droidlogic.app.tv.TvControlManager;
 import com.droidlogic.droidlivetv.shortcut.GuideListView.ListItemSelectedListener;
+import com.droidlogic.droidlivetv.ui.MarqueeTextView;
 
 import android.provider.Settings;
 import android.app.Activity;
@@ -432,7 +433,7 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
                     ArrayMap<String, Object> item = new ArrayMap<String, Object>();
                     String localName = info.getDisplayNameLocal();
                     String displayName = info.getDisplayName();
-                    item.put(GuideListView.ITEM_1, info.getDisplayNumber() + "  " + (!TextUtils.isEmpty(localName) ? localName : displayName));
+                    item.put(GuideListView.ITEM_1, info.getDisplayNumber() + "." + (!TextUtils.isEmpty(localName) ? localName : displayName));
                     item.put(GuideListView.ITEM_2, info.getDisplayNumber());
                     if (ChannelInfo.isRadioChannel(info)) {
                         item.put(GuideListView.ITEM_3, true);
@@ -695,6 +696,7 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        //Log.d(TAG, "onItemClick parent = " + parent + ", view = " + view + ",position = " + position);
         switch (parent.getId()) {
             case R.id.list_guide_channel:
                 sendSwitchChannelBroadcast(position);
@@ -733,6 +735,37 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
     public void onListItemSelected(View parent, int position) {
         switch (parent.getId()) {
             case R.id.list_guide_channel:
+                if (parent != null && parent instanceof GuideListView) {
+                    GuideListView listView = (GuideListView)parent;
+                    int count = listView.getChildCount();
+                    View last = null;
+                    View next = null;
+                    View current = (View)listView.getSelectedView();
+                    if (position > 0) {
+                        last = listView.getChildAt(position - 1);
+                    }
+                    if (position < count - 1) {
+                        next = listView.getChildAt(position + 1);
+                    }
+                    if (last != null) {
+                        MarqueeTextView marqueeText = last.findViewById(R.id.text_name);
+                        if (marqueeText != null) {
+                            marqueeText.setFocused(false);
+                        }
+                    }
+                    if (next != null) {
+                        MarqueeTextView marqueeText = next.findViewById(R.id.text_name);
+                        if (marqueeText != null) {
+                            marqueeText.setFocused(false);
+                        }
+                    }
+                    if (current != null) {
+                        MarqueeTextView marqueeText = current.findViewById(R.id.text_name);
+                        if (marqueeText != null) {
+                            marqueeText.setFocused(true);
+                        }
+                    }
+                }
                 lv_date.setAdapter(null);
                 lv_program.setAdapter(null);
                 currentChannelIndex = position;
