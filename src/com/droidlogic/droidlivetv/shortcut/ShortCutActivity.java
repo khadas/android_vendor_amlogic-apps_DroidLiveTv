@@ -512,15 +512,16 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
         if (channel_programs.size() > 0) {
             long firstProgramTime = channel_programs.get(0).getStartTimeUtcMillis();
             long lastProgramTime = channel_programs.get(channel_programs.size() - 1).getStartTimeUtcMillis();
-            int time_offset = TimeZone.getDefault().getOffset(firstProgramTime);
-
-            long tmp_time = (firstProgramTime) - ((firstProgramTime + time_offset) % DAY_TO_MS);
+            long currentStreamTime = mTvTime.getTime();
+            int time_offset = TimeZone.getDefault().getOffset(currentStreamTime);
+            long tmp_time = (currentStreamTime) - ((currentStreamTime + time_offset) % DAY_TO_MS);
             int count = 0;
-            Log.d(TAG, "firstProgramTime = " + Arrays.toString(getDateAndTime(firstProgramTime)) +
+            Log.d(TAG, "currentStreamTime = " + Arrays.toString(getDateAndTime(tmp_time)) +
+                    ", firstProgramTime = " + Arrays.toString(getDateAndTime(firstProgramTime)) +
                     ", lastProgramTime = " + Arrays.toString(getDateAndTime(lastProgramTime)));
             while ((tmp_time <= lastProgramTime) && count < 10) {//show 1 + 8 days
                 if (currentDateIndex == -1) {
-                    if (mTvTime.getTime() >= tmp_time && mTvTime.getTime() < tmp_time + DAY_TO_MS)
+                    if (currentStreamTime/*mTvTime.getTime()*/ >= tmp_time && currentStreamTime/*mTvTime.getTime()*/ < tmp_time + DAY_TO_MS)
                         currentDateIndex = count;
                 }
                 ArrayMap<String, Object> item = new ArrayMap<String, Object>();
@@ -534,7 +535,7 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
                 }
 
                 /*ignore the days before today*/
-                if (tmp_time <= mTvTime.getTime()) {
+                if (tmp_time <= currentStreamTime/*mTvTime.getTime()*/) {
                     continue;
                 }
                 count++;
@@ -664,6 +665,10 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
         if (list_program.size() == 0) {
             ArrayMap<String, Object> item = new ArrayMap<String, Object>();
             item.put(GuideListView.ITEM_1, mResources.getString(R.string.no_program));
+            item.put(GuideListView.ITEM_2, "");
+            item.put(GuideListView.ITEM_3, "");
+            item.put(GuideListView.ITEM_4, "");
+            item.put(GuideListView.ITEM_5, "");
 
             if (saveChannelIndex != currentChannelIndex) {
                 return;
