@@ -49,6 +49,17 @@
                 <action android:name="droidlogic.intent.action.droid_appointed_program" />
             </intent-filter>
         </receiver>
+        <activity android:name=".favlistsettings.SortFavActivity"
+            android:theme="@style/DialogTransparent" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>
+        <service
+            android:name=".favlistsettings.InterationService"
+            android:enabled="true"
+            android:exported="true"
+            android:process=":remote" />
     </application>
 
 </manifest>

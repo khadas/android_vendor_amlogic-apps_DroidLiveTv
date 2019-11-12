@@ -41,8 +41,10 @@ public class GuideListView extends ListView implements OnItemSelectedListener {
     public static final String ITEM_4               = "item4";
     public static final String ITEM_5               = "item5";
 
-    public static final String STATUS_PLAYING      = "playing ";
-    public static final String STATUS_APPOINTED    = "appointed ";
+    public static final String STATUS_PLAYING      = "playing";
+	public static final String STATUS_APPOINTED_RECORD    = "appointed_record";
+	public static final String STATUS_APPOINTED_WATCH    = "appointed_watch";
+	public static final String STATUS_RECORDING    = "recording";
 
     private Context mContext;
     private int selectedPosition = 0;

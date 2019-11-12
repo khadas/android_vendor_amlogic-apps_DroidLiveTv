@@ -56,8 +56,13 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
+import android.widget.Button;
 import android.widget.Toast;
 import android.media.tv.TvContentRating;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
+import android.view.WindowManager;
+import android.util.TypedValue;
 
 import com.droidlogic.droidlivetv.R;
 
@@ -128,6 +133,18 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
     private int mCurrentKeyCode = -1;
     private boolean mHandleUpdate = true;
 
+    private final BroadcastReceiver mDroidLiveTvReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d(TAG, "intent = " + intent);
+            if (intent != null) {
+                if (DroidLogicTvUtils.ACTION_STOP_EPG_ACTIVITY.equals(intent.getAction())) {
+                    finish();
+                }
+            }
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         // TODO Auto-generated method stub
@@ -135,6 +152,7 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         Intent intent = getIntent();
         Bundle bundle= intent.getExtras();
+        registerMainReceiver();
         if (bundle != null) {
             mCurrentKeyCode = bundle.getInt("eventkey");
             mDeviceId = bundle.getInt("deviceid");
@@ -152,19 +170,27 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
 
     @Override
     protected void onStart() {
-        Log.d(TAG, "------onStart");
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(Intent.ACTION_TIME_TICK);
-        filter.addAction(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
-        filter.addAction(Intent.ACTION_TIME_CHANGED);
-        registerReceiver(mReceiver, filter);
         super.onStart();
+        Log.d(TAG, "------onStart");
+    }
+
+    @Override
+    protected void onResume() {
+        super.onPause();
+        Log.d(TAG, "------onResume");
+        registerCommandReceiver();
+    };
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.d(TAG, "------onPause");
+        unregisterCommandReceiver();
     }
 
     @Override
     protected void onStop() {
         Log.d(TAG, "------onStop");
-        unregisterReceiver(mReceiver);
         if (mProgramObserver != null) {
             getContentResolver().unregisterContentObserver(mProgramObserver);
             mProgramObserver = null;
@@ -182,6 +208,7 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
     protected void onDestroy() {
         super.onDestroy();
         Log.d(TAG, "------onDestroy");
+        unregisterMainReceiver();
     }
 
     @Override
@@ -243,6 +270,30 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
         } else {
             handler.removeMessages(MSG_FINISH);
         }
+    }
+
+    private void registerMainReceiver() {
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(Intent.ACTION_TIME_TICK);
+        filter.addAction(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
+        filter.addAction(Intent.ACTION_TIME_CHANGED);
+        filter.addAction(DroidLogicTvUtils.ACTION_DROID_PROGRAM_RECORD_STATUS);
+        filter.addAction(Intent.ACTION_SCREEN_OFF);
+        registerReceiver(mReceiver, filter);
+    }
+
+    private void unregisterMainReceiver() {
+        unregisterReceiver(mReceiver);
+    }
+
+    private void registerCommandReceiver() {
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(DroidLogicTvUtils.ACTION_STOP_EPG_ACTIVITY);
+        registerReceiver(mDroidLiveTvReceiver, intentFilter);
+    }
+
+    private void unregisterCommandReceiver() {
+        unregisterReceiver(mDroidLiveTvReceiver);
     }
 
     Handler handler = new Handler() {
@@ -313,7 +364,7 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
     BroadcastReceiver mReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            if (action.equals(Intent.ACTION_TIME_TICK)) {
+            if (Intent.ACTION_TIME_TICK.equals(action)) {
                 if (tx_date != null) {
                     String[] dateAndTime = getDateAndTime(mTvTime.getTime());
                     String currentTime = dateAndTime[0] + "." + dateAndTime[1] + "." + dateAndTime[2] + "   " + dateAndTime[3] + ":" + dateAndTime[4];
@@ -328,57 +379,62 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
                     Log.d(TAG, "SysTime changed.");
                     loadDateTime();
                 }
+            } else if (DroidLogicTvUtils.ACTION_DROID_PROGRAM_RECORD_STATUS.equals(action)) {
+                Log.d(TAG, "REQUEST_RECORD_STATUS " + intent.toString());
+            } else if (Intent.ACTION_SCREEN_OFF.equals(action)) {
+                Log.d(TAG, "Receive ACTION_SCREEN_OFF");
+                finish();//stop epg when before suspend
             }
         }
     };
 
-    private class CompareDisplayNumber implements Comparator<ChannelInfo> {
+    public static class CompareDisplayNumber implements Comparator<ChannelInfo> {
 
         @Override
         public int compare(ChannelInfo o1, ChannelInfo o2) {
             int result = compareString(o1.getDisplayNumber(), o2.getDisplayNumber());
             return result;
         }
-    }
 
-    private int compareString(String a, String b) {
-        if (a == null) {
-            return b == null ? 0 : -1;
-        }
-        if (b == null) {
-            return 1;
-        }
-
-        int[] disnumbera = getMajorAndMinor(a);
-        int[] disnumberb = getMajorAndMinor(b);
-        if (disnumbera[0] != disnumberb[0]) {
-            return (disnumbera[0] - disnumberb[0]) > 0 ? 1 : -1;
-        } else if (disnumbera[1] != disnumberb[1]) {
-            return (disnumbera[1] - disnumberb[1]) > 0 ? 1 : -1;
-        }
-        return 0;
-    }
-
-    private int[] getMajorAndMinor(String disnumber) {
-        int[] result = {-1, -1};//major, minor
-        String[] splitone = (disnumber != null ? disnumber.split("-") : null);
-        if (splitone != null && splitone.length > 0) {
-            int length = 2;
-            if (splitone.length <= 2) {
-                length = splitone.length;
-            } else {
-                Log.d(TAG, "informal disnumber");
-                return result;
+        private int compareString(String a, String b) {
+            if (a == null) {
+                return b == null ? 0 : -1;
             }
-            for (int i = 0; i < length; i++) {
-                try {
-                   result[i] = Integer.valueOf(splitone[i]);
-                } catch (NumberFormatException e) {
-                    Log.d(TAG, splitone[i] + " not integer:" + e.getMessage());
+            if (b == null) {
+                return 1;
+            }
+
+            int[] disnumbera = getMajorAndMinor(a);
+            int[] disnumberb = getMajorAndMinor(b);
+            if (disnumbera[0] != disnumberb[0]) {
+                return (disnumbera[0] - disnumberb[0]) > 0 ? 1 : -1;
+            } else if (disnumbera[1] != disnumberb[1]) {
+                return (disnumbera[1] - disnumberb[1]) > 0 ? 1 : -1;
+            }
+            return 0;
+        }
+
+        private int[] getMajorAndMinor(String disnumber) {
+            int[] result = {-1, -1};//major, minor
+            String[] splitone = (disnumber != null ? disnumber.split("-") : null);
+            if (splitone != null && splitone.length > 0) {
+                int length = 2;
+                if (splitone.length <= 2) {
+                    length = splitone.length;
+                } else {
+                    Log.d(TAG, "informal disnumber");
+                    return result;
+                }
+                for (int i = 0; i < length; i++) {
+                    try {
+                       result[i] = Integer.valueOf(splitone[i]);
+                    } catch (NumberFormatException e) {
+                        Log.d(TAG, splitone[i] + " not integer:" + e.getMessage());
+                    }
                 }
             }
+            return result;
         }
-        return result;
     }
 
     private void setGuideView() {
@@ -650,9 +706,15 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
                 if (mTvTime.getTime() >= program.getStartTimeUtcMillis() && mTvTime.getTime() <= program.getEndTimeUtcMillis()) {
                     if (currentProgramIndex == -1)
                         currentProgramIndex = i;
-                    status = GuideListView.STATUS_PLAYING;
+                    if (program.getScheduledRecordStatus() == Program.RECORD_STATUS_IN_PROGRESS) {
+                        status = GuideListView.STATUS_RECORDING;
+                    } else {
+                        status = GuideListView.STATUS_PLAYING;
+                    }
+                } else if (program.getScheduledRecordStatus() == Program.RECORD_STATUS_APPOINTED) {
+                    status = GuideListView.STATUS_APPOINTED_RECORD;
                 } else if (program.isAppointed()) {
-                    status = GuideListView.STATUS_APPOINTED;
+                    status = GuideListView.STATUS_APPOINTED_WATCH;
                 }
                 item_program.put(GuideListView.ITEM_5, status);
 
@@ -710,27 +772,23 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
                 if (list_program.size() > position) {
                     Object programId_object = list_program.get(position).get(GuideListView.ITEM_4);
                     if (programId_object != null) {
-                        long programId = Long.valueOf(list_program.get(position).get(GuideListView.ITEM_4).toString());
-                        Program program = mTvDataBaseManager.getProgram(programId);
-                        String appointed_status;
-
-                        if (mTvTime.getTime() < program.getStartTimeUtcMillis()) {
-                            if (program.isAppointed()) {
-                                program.setIsAppointed(false);
-                                ((ImageView)view.findViewById(R.id.img_appointed)).setImageResource(0);
-                                appointed_status = mResources.getString(R.string.appointed_cancel);
-                                mTvDataBaseManager.updateProgram(program);
-                                cancelAppointedProgramAlarm(program);
+                        String idString = list_program.get(position).get(GuideListView.ITEM_4).toString();
+                        if (!TextUtils.isEmpty(idString)) {
+                            long programId = Long.valueOf(idString);
+                            Program program = mTvDataBaseManager.getProgram(programId);
+                            if (program != null) {
+                                long streamTime = mTvTime.getTime();
+                                if (streamTime >= program.getStartTimeUtcMillis() && streamTime <= program.getEndTimeUtcMillis()) {
+                                    Log.d(TAG, "onItemClick current playing program can't be appointed");
+                                    String canot_appointed_status = mResources.getString(R.string.appointed_donot_appoint_current);
+                                    showGuideToast(canot_appointed_status);
+                                } else {
+                                    showDialogToAppoint(ShortCutActivity.this, view, program);
+                                }
                             } else {
-                                program.setIsAppointed(true);
-                                ((ImageView)view.findViewById(R.id.img_appointed)).setImageResource(R.drawable.appointed);
-                                appointed_status = mResources.getString(R.string.appointed_success) + setAppointedProgramAlarm(program);
-                                mTvDataBaseManager.updateProgram(program);
+                                Log.d(TAG, "onItemClick current appointed program can't be found");
                             }
-                        } else {
-                            appointed_status = mResources.getString(R.string.appointed_expired);
                         }
-                        showGuideToast(appointed_status);
                     }
                 }
         }
@@ -858,6 +916,145 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
         guide_toast.show();
     }
 
+    private void showDialogToAppoint(final Context context, final View view, final Program program) {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        final AlertDialog alert = builder.create();
+        final View dialogView = View.inflate(context, R.layout.watch_record_confirm, null);
+        final Button watch = (Button) dialogView.findViewById(R.id.dialog_watch);
+        final Button record = (Button) dialogView.findViewById(R.id.dialog_record);
+        watch.requestFocus();
+        handler.removeMessages(MSG_FINISH);
+
+        watch.setOnClickListener(new Button.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //appoint to watch
+                dealAppoint(context, program, view, true);
+                alert.dismiss();
+            }
+        });
+        record.setOnClickListener(new Button.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //appoint to record
+                dealAppoint(context, program, view, false);
+                alert.dismiss();
+            }
+        });
+        alert.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialog) {
+                Log.d(TAG, "showDialogToAppoint onDismiss");
+                startShowActivityTimer();
+            }
+        });
+        alert.setView(dialogView);
+        alert.show();
+        //set size and background
+        WindowManager.LayoutParams params = alert.getWindow().getAttributes();
+        params.width = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 400, getResources().getDisplayMetrics());
+        params.height = WindowManager.LayoutParams.WRAP_CONTENT ;
+        alert.getWindow().setAttributes(params);
+        alert.getWindow().setBackgroundDrawableResource(R.drawable.dialog_background);
+    }
+
+    private void showOverlapConfirmDialog(final Context context, final View view, final Program overlapProgram, final Program newProgram) {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        final AlertDialog alert = builder.create();
+        final View dialogView = View.inflate(context, R.layout.overlap_confirm, null);
+        final TextView title = (TextView) dialogView.findViewById(R.id.dialog_title);
+        final Button cancel = (Button) dialogView.findViewById(R.id.dialog_cancel);
+        final Button add = (Button) dialogView.findViewById(R.id.dialog_add);
+        final String[] startTime = getDateAndTime(overlapProgram.getStartTimeUtcMillis());
+        final String[] endTime = getDateAndTime(overlapProgram.getEndTimeUtcMillis());
+        final String timePeriod = startTime[3] + ":" + startTime[4] + "~" +
+                endTime[3] + ":" + endTime[4];
+        title.setText(mResources.getString(R.string.appointed_overlap_title, overlapProgram.getTitle(), timePeriod));
+        cancel.requestFocus();
+        handler.removeMessages(MSG_FINISH);
+
+        cancel.setOnClickListener(new Button.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                alert.dismiss();
+            }
+        });
+        add.setOnClickListener(new Button.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                newProgram.setScheduledRecordStatus(Program.RECORD_STATUS_APPOINTED);
+                ((ImageView)view.findViewById(R.id.img_appointed)).setImageResource(R.drawable.scheduled_recording);
+                String appointed_status = mResources.getString(R.string.appointed_success) + setAppointedRecordProgram(newProgram);
+                mTvDataBaseManager.updateProgram(newProgram);
+                alert.dismiss();
+            }
+        });
+        alert.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialog) {
+                Log.d(TAG, "showOverlapConfirmDialog onDismiss");
+                startShowActivityTimer();
+            }
+        });
+        alert.setView(dialogView);
+        alert.show();
+        //set size and background
+        WindowManager.LayoutParams params = alert.getWindow().getAttributes();
+        params.width = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 600, getResources().getDisplayMetrics());
+        params.height = WindowManager.LayoutParams.WRAP_CONTENT ;
+        alert.getWindow().setAttributes(params);
+        alert.getWindow().setBackgroundDrawableResource(R.drawable.dialog_background);
+    }
+
+    private void dealAppoint(Context context, Program program, View view, boolean isWatch) {
+        String appointed_status;
+        if (program != null && view != null) {
+            if (isWatch) {
+                if (mTvTime.getTime() < program.getStartTimeUtcMillis()) {
+                    if (program.isAppointed()) {
+                        program.setIsAppointed(false);
+                        ((ImageView)view.findViewById(R.id.img_appointed)).setImageResource(0);
+                        appointed_status = mResources.getString(R.string.appointed_cancel);
+                        mTvDataBaseManager.updateProgram(program);
+                        cancelAppointedProgramAlarm(program);
+                    } else {
+                        program.setIsAppointed(true);
+                        ((ImageView)view.findViewById(R.id.img_appointed)).setImageResource(R.drawable.appointed);
+                        appointed_status = mResources.getString(R.string.appointed_success) + setAppointedProgramAlarm(program);
+                        mTvDataBaseManager.updateProgram(program);
+                    }
+                } else {
+                    appointed_status = mResources.getString(R.string.appointed_expired);
+                }
+                showGuideToast(appointed_status);
+            } else {
+                if (mTvTime.getTime() < program.getStartTimeUtcMillis()) {
+                    if (program.getScheduledRecordStatus() == Program.RECORD_STATUS_APPOINTED) {
+                        program.setScheduledRecordStatus(Program.RECORD_STATUS_NOT_STARTED);
+                        ((ImageView)view.findViewById(R.id.img_appointed)).setImageResource(0);
+                        appointed_status = mResources.getString(R.string.appointed_cancel);
+                        mTvDataBaseManager.updateProgram(program);
+                        cancelAppointedRecordProgram(program);
+                    } else if (program.getScheduledRecordStatus() == Program.RECORD_STATUS_NOT_STARTED) {
+                        List<Program> overlapPrograms = mTvDataBaseManager.getOverlapProgramsInTimePeriod(program);
+                        if (overlapPrograms != null && overlapPrograms.size() > 0) {
+                            Log.d(TAG, "dealAppoint record find overlap schedule");
+                            showOverlapConfirmDialog(context, view, overlapPrograms.get(0), program);
+                        } else {
+                            program.setScheduledRecordStatus(Program.RECORD_STATUS_APPOINTED);
+                            ((ImageView)view.findViewById(R.id.img_appointed)).setImageResource(R.drawable.scheduled_recording);
+                            appointed_status = mResources.getString(R.string.appointed_success) + setAppointedRecordProgram(program);
+                            mTvDataBaseManager.updateProgram(program);
+                        }
+                    }
+                } else {
+                    appointed_status = mResources.getString(R.string.appointed_expired);
+                }
+                //showGuideToast(appointed_status);
+            }
+        }
+    }
+
     private void sendSwitchChannelBroadcast(int position) {
         boolean isRadio = (boolean)list_channels.get(position).get(GuideListView.ITEM_3);
         ChannelInfo currentChannel = channelInfoList.get(currentChannelIndex);
@@ -919,18 +1116,59 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
         }
     }
 
-    private void cancelAppointedProgramAlarm (Program program) {
+    private void cancelAppointedProgramAlarm(Program program) {
         AlarmManager alarm = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
         alarm.cancel(buildPendingIntent(program));
     }
 
+    private String setAppointedRecordProgram(Program currentProgram) {
+        String schedulerProgram = "";
+        if (currentProgram != null) {
+            schedulerProgram = currentProgram.getTitle();
+            long pendingTime = currentProgram.getStartTimeUtcMillis() - mTvTime.getTime();
+            if (pendingTime > 0) {
+                Log.d(TAG, "setAppointedWatchProgram send scheduler " + pendingTime / 60000 + " min later starts record");
+                sendSchedulerIntent(currentProgram, true);
+            }
+        }
+        if (schedulerProgram.length() == 0) {
+            return schedulerProgram;
+        } else {
+            return " " + schedulerProgram;
+        }
+    }
+
+    private void cancelAppointedRecordProgram(Program program) {
+        if (program != null) {
+            sendSchedulerIntent(program, false);
+        }
+    }
+
     private PendingIntent buildPendingIntent (Program program) {
-        Intent intent = new Intent("droidlogic.intent.action.droid_appointed_program");
+        Intent intent = new Intent(DroidLogicTvUtils.ACTION_DROID_PROGRAM_WATCH_APPOINTED);
         intent.addFlags(0x01000000/*Intent.FLAG_RECEIVER_INCLUDE_BACKGROUND*/);
         intent.putExtra(DroidLogicTvUtils.EXTRA_PROGRAM_ID, program.getId());
         intent.putExtra(DroidLogicTvUtils.EXTRA_CHANNEL_ID, program.getChannelId());
         //sendBroadcast(intent);
         return PendingIntent.getBroadcast(this, (int)program.getId(), intent, 0);
+    }
+
+    private void sendSchedulerIntent (Program program, boolean add) {
+        Intent intent = new Intent(DroidLogicTvUtils.ACTION_DROID_PROGRAM_RECORD_APPOINTED);
+        intent.addFlags(0x01000000/*Intent.FLAG_RECEIVER_INCLUDE_BACKGROUND*/);
+        intent.putExtra(DroidLogicTvUtils.EXTRA_PROGRAM_ID, program.getId());
+        intent.putExtra(DroidLogicTvUtils.EXTRA_CHANNEL_ID, program.getChannelId());
+        intent.putExtra(DroidLogicTvUtils.ACTION_DROID_PROGRAM_RECORD_OPERATION, add);
+        sendBroadcast(intent);
+    }
+
+    private PendingIntent getExistPendingIntent (Program program) {
+        Intent intent = new Intent(DroidLogicTvUtils.ACTION_DROID_PROGRAM_RECORD_APPOINTED);
+        intent.addFlags(0x01000000/*Intent.FLAG_RECEIVER_INCLUDE_BACKGROUND*/);
+        intent.putExtra(DroidLogicTvUtils.EXTRA_PROGRAM_ID, program.getId());
+        intent.putExtra(DroidLogicTvUtils.EXTRA_CHANNEL_ID, program.getChannelId());
+        //sendBroadcast(intent);
+        return PendingIntent.getBroadcast(this, (int)program.getId(), intent, PendingIntent.FLAG_NO_CREATE);
     }
 
     private final class ProgramObserver extends ContentObserver {

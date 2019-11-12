@@ -15,12 +15,14 @@
 LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
-LOCAL_SRC_FILES := $(call all-java-files-under, src)
-
 LOCAL_PACKAGE_NAME := DroidLiveTv
 LOCAL_CERTIFICATE := platform
 LOCAL_JAVA_LIBRARIES := droidlogic droidlogic-tv
 LOCAL_DEX_PREOPT := false
+
+LOCAL_SRC_FILES := $(call all-java-files-under, src)
+LOCAL_SRC_FILES += $(call all-Iaidl-files-under, src)
+
 LOCAL_STATIC_JAVA_LIBRARIES := \
     android-support-v4 \
     android-support-v17-leanback \

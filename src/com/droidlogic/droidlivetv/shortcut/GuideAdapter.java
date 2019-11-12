@@ -83,18 +83,18 @@ public class GuideAdapter extends BaseAdapter {
         }
         Object status_object = mlistItem.get(position).get(GuideListView.ITEM_5);
         if (status_object != null) {
-            String status = status_object.toString();
-            if (status.equals(GuideListView.STATUS_PLAYING)) {
-                holder.playing.setImageResource(R.drawable.playing);
-            } else {
-                holder.playing.setImageResource(0);
-            }
-            if (status.equals(GuideListView.STATUS_APPOINTED)) {
-                holder.appointed.setImageResource(R.drawable.appointed);
-            } else {
-                holder.appointed.setImageResource(0);
-            }
-        }
+			String status = status_object.toString();
+			if (status.equals(GuideListView.STATUS_PLAYING)) {
+				holder.appointed.setImageResource(R.drawable.playing);
+			} else if (status.equals(GuideListView.STATUS_RECORDING)) {
+				holder.appointed.setImageResource(R.drawable.recording_program);
+			} else if (status.equals(GuideListView.STATUS_APPOINTED_RECORD)) {
+				holder.appointed.setImageResource(R.drawable.scheduled_recording);											  } else if (status.equals(GuideListView.STATUS_APPOINTED_WATCH)) {
+				holder.appointed.setImageResource(R.drawable.appointed);
+			} else {
+			    holder.appointed.setImageResource(0);
+			}
+		}
         return convertView;
     }
 
