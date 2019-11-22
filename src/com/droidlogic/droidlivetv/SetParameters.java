@@ -21,6 +21,7 @@ import android.util.Log;
 import android.media.tv.TvContract;
 import android.provider.Settings;
 
+import com.droidlogic.app.tv.AudioEffectManager;
 import com.droidlogic.app.tv.TvControlManager;
 import com.droidlogic.app.SystemControlManager;
 import com.droidlogic.app.tv.TvDataBaseManager;
@@ -57,13 +58,14 @@ public class SetParameters {
     public static final int STATUS_MONITOR  = 5;
     public static final int STATUS_USER     = 6;
 
-    public static final String SOUND_EFFECT_SOUND_MODE            = "sound_effect_sound_mode";
-    public static final String SOUND_EFFECT_SOUND_MODE_TYPE       = "sound_effect_sound_mode_type";
-    public static final String SOUND_EFFECT_SOUND_MODE_TYPE_DAP   = "type_dap";
-    public static final String SOUND_EFFECT_SOUND_MODE_TYPE_EQ    = "type_eq";
-    public static final String SOUND_EFFECT_SOUND_MODE_DAP_VALUE  = "sound_effect_sound_mode_dap";
-    public static final String SOUND_EFFECT_SOUND_MODE_EQ_VALUE   = "sound_effect_sound_mode_eq";
     public static final int MODE_STANDARD = 0;
+
+    private static final String DB_ID_SOUND_EFFECT_SOUND_MODE                   = "db_id_sound_effect_sound_mode";
+    private static final String DB_ID_SOUND_EFFECT_SOUND_MODE_TYPE              = "db_id_sound_effect_sound_mode_type";
+    private static final String DB_ID_SOUND_EFFECT_SOUND_MODE_DAP_VALUE         = "db_id_sound_effect_sound_mode_dap";
+    private static final String DB_ID_SOUND_EFFECT_SOUND_MODE_EQ_VALUE          = "db_id_sound_effect_sound_mode_eq";
+    private static final String DB_ID_SOUND_EFFECT_SOUND_MODE_TYPE_DAP          = "db_id_sound_effect_sound_mode_type_dap";
+    private static final String DB_ID_SOUND_EFFECT_SOUND_MODE_TYPE_EQ           = "db_id_sound_effect_sound_mode_type_eq";
 
     public SetParameters(Context context, Bundle bundle) {
         this.mContext = context;
@@ -142,14 +144,14 @@ public class SetParameters {
 
     public  int getSoundModeStatus () {
         int itemPosition = -1;
-        String soundmodetype = Settings.Global.getString(mContext.getContentResolver(), SOUND_EFFECT_SOUND_MODE_TYPE);
+        String soundmodetype = Settings.Global.getString(mContext.getContentResolver(), DB_ID_SOUND_EFFECT_SOUND_MODE_TYPE);
         Log.d(TAG, "getSoundModeStatus soundmodetype = " + soundmodetype);
-        if (soundmodetype == null || SOUND_EFFECT_SOUND_MODE_TYPE_EQ.equals(soundmodetype)) {
-            itemPosition = Settings.Global.getInt(mContext.getContentResolver(), SOUND_EFFECT_SOUND_MODE_EQ_VALUE, MODE_STANDARD);
-        } else if ((SOUND_EFFECT_SOUND_MODE_TYPE_DAP.equals(soundmodetype))) {
-            itemPosition = Settings.Global.getInt(mContext.getContentResolver(), SOUND_EFFECT_SOUND_MODE_DAP_VALUE, MODE_STANDARD);
+        if (soundmodetype == null || DB_ID_SOUND_EFFECT_SOUND_MODE_TYPE_EQ.equals(soundmodetype)) {
+            itemPosition = Settings.Global.getInt(mContext.getContentResolver(), DB_ID_SOUND_EFFECT_SOUND_MODE_EQ_VALUE, MODE_STANDARD);
+        } else if ((DB_ID_SOUND_EFFECT_SOUND_MODE_TYPE_DAP.equals(soundmodetype))) {
+            itemPosition = Settings.Global.getInt(mContext.getContentResolver(), DB_ID_SOUND_EFFECT_SOUND_MODE_DAP_VALUE, MODE_STANDARD);
         } else {
-            itemPosition = Settings.Global.getInt(mContext.getContentResolver(), SOUND_EFFECT_SOUND_MODE, MODE_STANDARD);
+            itemPosition = Settings.Global.getInt(mContext.getContentResolver(), DB_ID_SOUND_EFFECT_SOUND_MODE, MODE_STANDARD);
         }
         Log.d(TAG, "getSoundModeStatus:" + itemPosition);
         return itemPosition;
@@ -157,13 +159,13 @@ public class SetParameters {
 
     public void setSoundMode (int mode) {
         Log.d(TAG, "setSoundMode:" + mode);
-        String soundmodetype = Settings.Global.getString(mContext.getContentResolver(), SOUND_EFFECT_SOUND_MODE_TYPE);
-        if (soundmodetype == null || SOUND_EFFECT_SOUND_MODE_TYPE_EQ.equals(soundmodetype)) {
-            Settings.Global.putInt(mContext.getContentResolver(), SOUND_EFFECT_SOUND_MODE_EQ_VALUE, mode);
-        } else if ((SOUND_EFFECT_SOUND_MODE_TYPE_DAP.equals(soundmodetype))) {
-            Settings.Global.putInt(mContext.getContentResolver(), SOUND_EFFECT_SOUND_MODE_DAP_VALUE, mode);
+        String soundmodetype = Settings.Global.getString(mContext.getContentResolver(), DB_ID_SOUND_EFFECT_SOUND_MODE_TYPE);
+        if (soundmodetype == null || DB_ID_SOUND_EFFECT_SOUND_MODE_TYPE_EQ.equals(soundmodetype)) {
+            Settings.Global.putInt(mContext.getContentResolver(), DB_ID_SOUND_EFFECT_SOUND_MODE_EQ_VALUE, mode);
+        } else if ((DB_ID_SOUND_EFFECT_SOUND_MODE_TYPE_DAP.equals(soundmodetype))) {
+            Settings.Global.putInt(mContext.getContentResolver(), DB_ID_SOUND_EFFECT_SOUND_MODE_DAP_VALUE, mode);
         } else {
-            Settings.Global.putInt(mContext.getContentResolver(), SOUND_EFFECT_SOUND_MODE, mode);
+            Settings.Global.putInt(mContext.getContentResolver(), DB_ID_SOUND_EFFECT_SOUND_MODE, mode);
         }
     }
 

@@ -75,7 +75,7 @@ public class AppointedProgramReceiver extends BroadcastReceiver implements OnCli
     private void wakeUp(long time) {
          try {
              Class<?> cls = Class.forName("android.os.PowerManager");
-             Method method = cls.getMethod("wakeup", long.class);
+             Method method = cls.getMethod("wakeUp", long.class);
              method.invoke(mPowerManager, time);
          } catch(Exception e) {
              e.printStackTrace();
