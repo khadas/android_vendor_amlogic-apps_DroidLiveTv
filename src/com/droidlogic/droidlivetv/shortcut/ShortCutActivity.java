@@ -1102,10 +1102,15 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
                 mTvDataBaseManager.updateProgram(program);
             }
         }
-
         long pendingTime = currentProgram.getStartTimeUtcMillis() - mTvTime.getTime();
         if (pendingTime > 0) {
-            Log.d(TAG, "" + pendingTime / 60000 + " min later show program prompt");
+            Log.d(TAG, "" + pendingTime / 60000 + " min " + pendingTime % 60000 / 1000 + " sec later show program prompt");
+            //check it one minute before appointed time is up
+            if (pendingTime > 60000) {
+                pendingTime = pendingTime - 60000;
+            } else {
+                pendingTime = 0;
+            }
             alarm.setExact(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + pendingTime, buildPendingIntent(currentProgram));
         }
 
@@ -1127,7 +1132,7 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
             schedulerProgram = currentProgram.getTitle();
             long pendingTime = currentProgram.getStartTimeUtcMillis() - mTvTime.getTime();
             if (pendingTime > 0) {
-                Log.d(TAG, "setAppointedWatchProgram send scheduler " + pendingTime / 60000 + " min later starts record");
+                Log.d(TAG, "setAppointedWatchProgram send scheduler " + pendingTime / 60000 + " min " + pendingTime % 60000 / 1000 + " sec later starts record");
                 sendSchedulerIntent(currentProgram, true);
             }
         }
