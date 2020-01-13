@@ -81,17 +81,24 @@ public class GuideAdapter extends BaseAdapter {
         if (title_object != null) {
             holder.title.setText(title_object.toString());
         }
-        Object status_object = mlistItem.get(position).get(GuideListView.ITEM_5);
-        if (status_object != null) {
-            String status = status_object.toString();
+        Object watch_status_object = mlistItem.get(position).get(GuideListView.ITEM_5);
+        if (watch_status_object != null) {
+            String status = watch_status_object.toString();
             if (status.equals(GuideListView.STATUS_PLAYING)) {
-                holder.appointed.setImageResource(R.drawable.playing);
-            } else if (status.equals(GuideListView.STATUS_RECORDING)) {
+                holder.playing.setImageResource(R.drawable.playing);
+            } else if (status.equals(GuideListView.STATUS_APPOINTED_WATCH)) {
+                holder.playing.setImageResource(R.drawable.appointed);
+            } else {
+                holder.playing.setImageResource(0);
+            }
+        }
+        Object pvr_status_object = mlistItem.get(position).get(GuideListView.ITEM_6);
+        if (pvr_status_object != null) {
+            String status = pvr_status_object.toString();
+            if (status.equals(GuideListView.STATUS_RECORDING)) {
                 holder.appointed.setImageResource(R.drawable.recording_program);
             } else if (status.equals(GuideListView.STATUS_APPOINTED_RECORD)) {
                 holder.appointed.setImageResource(R.drawable.scheduled_recording);
-            } else if (status.equals(GuideListView.STATUS_APPOINTED_WATCH)) {
-                holder.appointed.setImageResource(R.drawable.appointed);
             } else {
                 holder.appointed.setImageResource(0);
             }

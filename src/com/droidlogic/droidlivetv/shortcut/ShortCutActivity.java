@@ -647,7 +647,8 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
                 String[] dateAndTime = getDateAndTime(program.getStartTimeUtcMillis());
                 String[] endTime = getDateAndTime(program.getEndTimeUtcMillis());
                 String month_and_date = dateAndTime[1] + "." + dateAndTime[2];
-                String status = "";
+                String watchStatus = "";
+                String pvrStatus = "";
 
                 ArrayMap<String, Object> item_program = new ArrayMap<String, Object>();
 
@@ -706,17 +707,24 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
                 if (mTvTime.getTime() >= program.getStartTimeUtcMillis() && mTvTime.getTime() <= program.getEndTimeUtcMillis()) {
                     if (currentProgramIndex == -1)
                         currentProgramIndex = i;
+                    watchStatus = GuideListView.STATUS_PLAYING;
                     if (program.getScheduledRecordStatus() == Program.RECORD_STATUS_IN_PROGRESS) {
-                        status = GuideListView.STATUS_RECORDING;
-                    } else {
-                        status = GuideListView.STATUS_PLAYING;
+                        pvrStatus = GuideListView.STATUS_RECORDING;
                     }
-                } else if (program.getScheduledRecordStatus() == Program.RECORD_STATUS_APPOINTED) {
-                    status = GuideListView.STATUS_APPOINTED_RECORD;
-                } else if (program.isAppointed()) {
-                    status = GuideListView.STATUS_APPOINTED_WATCH;
+                } else {
+                    if (program.getScheduledRecordStatus() == Program.RECORD_STATUS_APPOINTED) {
+                        pvrStatus = GuideListView.STATUS_APPOINTED_RECORD;
+                    } else {
+                        pvrStatus = "";
+                    }
+                    if (program.isAppointed()) {
+                        watchStatus = GuideListView.STATUS_APPOINTED_WATCH;
+                    } else {
+                        watchStatus = "";
+                    }
                 }
-                item_program.put(GuideListView.ITEM_5, status);
+                item_program.put(GuideListView.ITEM_5, watchStatus);
+                item_program.put(GuideListView.ITEM_6, pvrStatus);
 
                 if (saveChannelIndex != currentChannelIndex) {
                     return;
@@ -731,6 +739,7 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
             item.put(GuideListView.ITEM_3, "");
             item.put(GuideListView.ITEM_4, "");
             item.put(GuideListView.ITEM_5, "");
+            item.put(GuideListView.ITEM_6, "");
 
             if (saveChannelIndex != currentChannelIndex) {
                 return;
@@ -1064,7 +1073,7 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
                 if (mTvTime.getTime() < program.getStartTimeUtcMillis()) {
                     if (program.isAppointed()) {
                         program.setIsAppointed(false);
-                        ((ImageView)view.findViewById(R.id.img_appointed)).setImageResource(0);
+                        ((ImageView)view.findViewById(R.id.img_playing)).setImageResource(0);
                         appointed_status = mResources.getString(R.string.appointed_cancel);
                         mTvDataBaseManager.updateProgram(program);
                         cancelAppointedProgramAlarm(program);
