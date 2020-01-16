@@ -76,6 +76,9 @@
     <string name="program_rating">Rating: </string>
     <string name="program_short">Description: </string>
     <string name="program_extend">Extend: </string>
+    <string name="appointed_watch_conflict">Another appointment <xliff:g id="program_name" example="test">%1$s</xliff:g> <xliff:g id="time_period" example="00:00~01:00">%2$s</xliff:g> will be started at the same time. Do you want to replace it ?</string>
+    <string name="appointed_watch_conflict_cancel">Cancel</string>
+    <string name="appointed_watch_conflict_replace">Replace</string>
 
     <!-- favlist settings -->
     <string name="favlist_all_tv">All TV</string>

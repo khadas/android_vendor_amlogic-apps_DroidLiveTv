@@ -1006,6 +1006,57 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
         alert.getWindow().setBackgroundDrawableResource(R.drawable.dialog_background);
     }
 
+    private void showAppointWatchConflictDialog(final Context context, final View view, final Program overlapProgram, final Program newProgram) {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        final AlertDialog alert = builder.create();
+        final View dialogView = View.inflate(context, R.layout.overlap_confirm, null);
+        final TextView title = (TextView) dialogView.findViewById(R.id.dialog_title);
+        final Button cancel = (Button) dialogView.findViewById(R.id.dialog_cancel);
+        final Button add = (Button) dialogView.findViewById(R.id.dialog_add);
+        final String[] startTime = getDateAndTime(overlapProgram.getStartTimeUtcMillis());
+        final String[] endTime = getDateAndTime(overlapProgram.getEndTimeUtcMillis());
+        final String timePeriod = startTime[3] + ":" + startTime[4] + "~" +
+                endTime[3] + ":" + endTime[4];
+        cancel.setText(R.string.appointed_watch_conflict_cancel);
+        add.setText(R.string.appointed_watch_conflict_replace);
+        title.setText(mResources.getString(R.string.appointed_watch_conflict, overlapProgram.getTitle(), timePeriod));
+        add.requestFocus();
+        handler.removeMessages(MSG_FINISH);
+
+        cancel.setOnClickListener(new Button.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                alert.dismiss();
+            }
+        });
+        add.setOnClickListener(new Button.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                newProgram.setIsAppointed(true);
+                ((ImageView)view.findViewById(R.id.img_playing)).setImageResource(R.drawable.appointed);
+                String appointed_status = mResources.getString(R.string.appointed_success) + setAppointedProgramAlarm(newProgram);
+                mTvDataBaseManager.updateProgram(newProgram);
+                showGuideToast(appointed_status);
+                alert.dismiss();
+            }
+        });
+        alert.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialog) {
+                Log.d(TAG, "showAppointWatchConflictDialog onDismiss");
+                startShowActivityTimer();
+            }
+        });
+        alert.setView(dialogView);
+        alert.show();
+        //set size and background
+        WindowManager.LayoutParams params = alert.getWindow().getAttributes();
+        params.width = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 600, getResources().getDisplayMetrics());
+        params.height = WindowManager.LayoutParams.WRAP_CONTENT ;
+        alert.getWindow().setAttributes(params);
+        alert.getWindow().setBackgroundDrawableResource(R.drawable.dialog_background);
+    }
+
     private void dealAppoint(Context context, Program program, View view, boolean isWatch) {
         String appointed_status;
         if (program != null && view != null) {
@@ -1017,16 +1068,23 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
                         appointed_status = mResources.getString(R.string.appointed_cancel);
                         mTvDataBaseManager.updateProgram(program);
                         cancelAppointedProgramAlarm(program);
+                        showGuideToast(appointed_status);
                     } else {
-                        program.setIsAppointed(true);
-                        ((ImageView)view.findViewById(R.id.img_appointed)).setImageResource(R.drawable.appointed);
-                        appointed_status = mResources.getString(R.string.appointed_success) + setAppointedProgramAlarm(program);
-                        mTvDataBaseManager.updateProgram(program);
+                        Program conflictProgram = getAppointedTimeConflictedProgram(program.getStartTimeUtcMillis());
+                        if (conflictProgram == null) {
+                            program.setIsAppointed(true);
+                            ((ImageView)view.findViewById(R.id.img_playing)).setImageResource(R.drawable.appointed);
+                            appointed_status = mResources.getString(R.string.appointed_success) + setAppointedProgramAlarm(program);
+                            mTvDataBaseManager.updateProgram(program);
+                            showGuideToast(appointed_status);
+                        } else {
+                            showAppointWatchConflictDialog(context, view, conflictProgram, program);
+                        }
                     }
                 } else {
                     appointed_status = mResources.getString(R.string.appointed_expired);
+                    showGuideToast(appointed_status);
                 }
-                showGuideToast(appointed_status);
             } else {
                 if (mTvTime.getTime() < program.getStartTimeUtcMillis()) {
                     if (program.getScheduledRecordStatus() == Program.RECORD_STATUS_APPOINTED) {
@@ -1181,6 +1239,20 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
         intent.putExtra(DroidLogicTvUtils.EXTRA_CHANNEL_ID, program.getChannelId());
         //sendBroadcast(intent);
         return PendingIntent.getBroadcast(this, (int)program.getId(), intent, PendingIntent.FLAG_NO_CREATE);
+    }
+
+    private Program getAppointedTimeConflictedProgram(long startTime) {
+        Program result = null;
+        List<Program> appointedPrograms = mTvDataBaseManager.getAppointedPrograms();
+        if (appointedPrograms != null && appointedPrograms.size() > 0) {
+            for (Program single : appointedPrograms) {
+                if (startTime == single.getStartTimeUtcMillis()) {
+                    result = single;
+                    break;
+                }
+            }
+        }
+        return result;
     }
 
     private final class ProgramObserver extends ContentObserver {

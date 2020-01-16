@@ -69,6 +69,9 @@
     <string name="program_rating">等级: </string>
     <string name="program_short">描述: </string>
     <string name="program_extend">信息: </string>
+    <string name="appointed_watch_conflict">另一个预约 <xliff:g id="program_name" example="test">%1$s</xliff:g> <xliff:g id="time_period" example="00:00~01:00">%2$s</xliff:g> 预约时间冲突，要替换吗 ?</string>
+    <string name="appointed_watch_conflict_cancel">取消</string>
+    <string name="appointed_watch_conflict_replace">替换</string>
 
     <!-- favlist settings -->
     <string name="favlist_all_tv">所有节目</string>
