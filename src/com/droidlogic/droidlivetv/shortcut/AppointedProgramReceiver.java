@@ -30,6 +30,7 @@ import android.view.LayoutInflater;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.TextView;
+import android.widget.Button;
 import android.text.TextUtils;
 import android.util.Log;
 import android.media.tv.TvInputManager;
@@ -53,10 +54,11 @@ import java.lang.reflect.Method;
 
 import com.droidlogic.droidlivetv.R;
 
-public class AppointedProgramReceiver extends BroadcastReceiver implements OnClickListener, OnFocusChangeListener {
+public class AppointedProgramReceiver extends BroadcastReceiver implements OnFocusChangeListener {
     private static final String TAG = "AppointedProgramReceiver";
     private static final String PACKAGE_LAUNCHER = "com.droidlogic.mboxlauncher";
     private static final int MSG_COUNT_DOWN = 0;
+    private static final long PROGRAM_INTERVAL = 60000;
     private int countdown = 60;
 
     private Context mContext;
@@ -96,10 +98,24 @@ public class AppointedProgramReceiver extends BroadcastReceiver implements OnCli
         }
         programid = intent.getLongExtra(DroidLogicTvUtils.EXTRA_PROGRAM_ID, -1L);
         channelid = intent.getLongExtra(DroidLogicTvUtils.EXTRA_CHANNEL_ID, -1L);
+        boolean isSetting = intent.getBooleanExtra(DroidLogicTvUtils.EXTRA_APPOINTED_SETTING, false);
+        boolean isAdd = intent.getBooleanExtra(DroidLogicTvUtils.EXTRA_APPOINTED_ACTION, false);
+        if (isSetting) {
+            Log.d(TAG, "onReceive excute appoint setting");
+            if (isAdd) {
+                intent.putExtra(DroidLogicTvUtils.EXTRA_APPOINTED_SETTING, false);
+                setAppointedProgramAlarm(intent);
+            } else {
+                intent.putExtra(DroidLogicTvUtils.EXTRA_APPOINTED_SETTING, false);
+                cancelAppointedProgramAlarm(intent);
+            }
+            return;
+        }
         mTvDataBaseManager = new TvDataBaseManager(mContext);
         List<Program> programList = mTvDataBaseManager.getPrograms(TvContract.buildProgramUri(programid));
 
         if (programList.size() > 0) {
+            cancelAppointedProgramAlarm(programid);
             Program program = mTvDataBaseManager.getPrograms(TvContract.buildProgramUri(programid)).get(0);
             program.setIsAppointed(false);
             mTvDataBaseManager.updateProgram(program);
@@ -133,35 +149,41 @@ public class AppointedProgramReceiver extends BroadcastReceiver implements OnCli
             tx_content.setText(mContext.getResources().getString(R.string.watch_program) + " " + program.getTitle());
 
             TextView button_cancel = (TextView)view.findViewById(R.id.dialog_cancel);
-            button_cancel.setOnClickListener(this);
+            //button_cancel.setOnClickListener(this);
             button_cancel.setOnFocusChangeListener(this);
 
             TextView button_ok = (TextView)view.findViewById(R.id.dialog_ok);
-            button_ok.setOnClickListener(this);
+            //button_ok.setOnClickListener(this);
             button_ok.setOnFocusChangeListener(this);
 
+            button_cancel.setOnClickListener(new Button.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (mAlertDialog != null) {
+                        mAlertDialog.dismiss();
+                    }
+                }
+            });
+            button_ok.setOnClickListener(new Button.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (mAlertDialog != null) {
+                        mAlertDialog.dismiss();
+                    }
+                    startLiveTv();
+                }
+            });
+            mAlertDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                @Override
+                public void onDismiss(DialogInterface dialog) {
+                    Log.d(TAG, "mAlertDialog onDismiss");
+                    timer.cancel();
+                }
+            });
             timer = new Timer(true);
             timer.schedule(task, 0, 1000);
         } else {
             Log.d(TAG, "the appointed program is not exist" + programid);
-        }
-    }
-
-    @Override
-    public void onClick(View v) {
-        timer.cancel();
-        switch (v.getId()) {
-            case R.id.dialog_cancel:
-                if (mAlertDialog != null) {
-                    mAlertDialog.dismiss();
-                }
-                break;
-            case R.id.dialog_ok:
-                if (mAlertDialog != null) {
-                    mAlertDialog.dismiss();
-                }
-                startLiveTv();
-                break;
         }
     }
 
@@ -201,13 +223,21 @@ public class AppointedProgramReceiver extends BroadcastReceiver implements OnCli
         Program logicprogram = mTvDataBaseManager.getProgram(programid);
         if (logicprogram != null) {
             Log.d(TAG, "cancelAppointedProgramAlarm id = " + programid);
-            AlarmManager alarm = (AlarmManager)mContext.getSystemService(Context.ALARM_SERVICE);
-            Intent intent = new Intent(DroidLogicTvUtils.ACTION_LIVETV_PROGRAM_APPOINTED);
-            intent.putExtra(DroidLogicTvUtils.EXTRA_PROGRAM_ID, logicprogram.getId());
-            intent.putExtra(DroidLogicTvUtils.EXTRA_CHANNEL_ID, logicprogram.getChannelId());
             logicprogram.setIsAppointed(false);
             mTvDataBaseManager.updateProgram(logicprogram);
-            alarm.cancel(PendingIntent.getBroadcast(mContext, (int)logicprogram.getId(), intent, 0));
+            AlarmManager alarm = (AlarmManager)mContext.getSystemService(Context.ALARM_SERVICE);
+            Intent intent = new Intent(DroidLogicTvUtils.ACTION_DROID_PROGRAM_WATCH_APPOINTED);
+            intent.addFlags(0x01000000/*Intent.FLAG_RECEIVER_INCLUDE_BACKGROUND*/);
+            intent.setData(TvContract.buildProgramUri(logicprogram.getId()));
+            intent.setClassName("com.droidlogic.droidlivetv", "com.droidlogic.droidlivetv.shortcut.AppointedProgramReceiver");
+            intent.putExtra(DroidLogicTvUtils.EXTRA_PROGRAM_ID, logicprogram.getId());
+            intent.putExtra(DroidLogicTvUtils.EXTRA_CHANNEL_ID, logicprogram.getChannelId());
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(mContext, 0, intent, PendingIntent.FLAG_NO_CREATE);
+            if (pendingIntent != null) {
+                alarm.cancel(pendingIntent);
+            } else {
+                Log.d(TAG, "cancelAppointedProgramAlarm no alarm");
+            }
         }
     }
 
@@ -237,4 +267,60 @@ public class AppointedProgramReceiver extends BroadcastReceiver implements OnCli
             }
         }
     };
+
+    private void setAppointedProgramAlarm(Intent data) {
+        if (data == null) {
+            Log.d(TAG, "setAppointedProgramAlarm null data");
+            return;
+        }
+        AlarmManager alarm = (AlarmManager)mContext.getSystemService(Context.ALARM_SERVICE);
+        long pendingTime = data.getLongExtra(DroidLogicTvUtils.EXTRA_APPOINTED_DELAY, -1l);
+        if (pendingTime >= 0) {
+            Log.d(TAG, "" + pendingTime / 60000 + " min " + pendingTime % 60000 / 1000 + " sec later show program prompt");
+            //check it one minute before appointed time is up
+            if (pendingTime > 60000) {
+                pendingTime = pendingTime - 60000;
+            } else {
+                pendingTime = 0;
+            }
+            PendingIntent pendingIntent = buildPendingIntent(data, true);
+            alarm.setExact(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + pendingTime, pendingIntent);
+            Log.d(TAG, "setAppointedProgramAlarm pendingIntent = " + pendingIntent);
+        }
+    }
+
+    private void cancelAppointedProgramAlarm(Intent data) {
+        if (data == null) {
+            Log.d(TAG, "cancelAppointedProgramAlarm null data");
+            return;
+        }
+        AlarmManager alarm = (AlarmManager)mContext.getSystemService(Context.ALARM_SERVICE);
+        PendingIntent pendingIntent = buildPendingIntent(data, false);
+        if (pendingIntent != null) {
+            alarm.cancel(pendingIntent);
+        }
+        Log.d(TAG, "cancelAppointedProgramAlarm pendingIntent = " + pendingIntent);
+    }
+
+    private PendingIntent buildPendingIntent (Intent data, boolean creatNew) {
+        if (data == null) {
+            Log.d(TAG, "buildPendingIntent null data");
+            return null;
+        }
+        Intent intent = new Intent(DroidLogicTvUtils.ACTION_DROID_PROGRAM_WATCH_APPOINTED);
+        intent.addFlags(0x01000000/*Intent.FLAG_RECEIVER_INCLUDE_BACKGROUND*/);
+        intent.setData(data.getData());
+        intent.setComponent(data.getComponent());
+        intent.putExtra(DroidLogicTvUtils.EXTRA_PROGRAM_ID, data.getLongExtra(DroidLogicTvUtils.EXTRA_PROGRAM_ID, -1l));
+        intent.putExtra(DroidLogicTvUtils.EXTRA_CHANNEL_ID, data.getLongExtra(DroidLogicTvUtils.EXTRA_CHANNEL_ID, -1l));
+        //sendBroadcast(intent);
+        PendingIntent pendingIntent = null;
+        if (creatNew) {
+            pendingIntent = PendingIntent.getBroadcast(mContext, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
+        } else {
+            pendingIntent = PendingIntent.getBroadcast(mContext, 0, intent, PendingIntent.FLAG_NO_CREATE);
+        }
+        Log.d(TAG, "buildPendingIntent creatNew = " + creatNew + ", pendingIntent = " + pendingIntent);
+        return pendingIntent;
+    }
 }

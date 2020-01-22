@@ -1111,7 +1111,10 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
             } else {
                 pendingTime = 0;
             }
-            alarm.setExact(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + pendingTime, buildPendingIntent(currentProgram));
+            //PendingIntent pendingIntent = buildPendingIntent(currentProgram, true);
+            //alarm.setExact(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + pendingTime, pendingIntent);
+            //excuted by broadcast
+            sendAppointedWatchIntent(currentProgram, true, pendingTime);
         }
 
         if (cancelProgram.length() == 0) {
@@ -1122,8 +1125,7 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
     }
 
     private void cancelAppointedProgramAlarm(Program program) {
-        AlarmManager alarm = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
-        alarm.cancel(buildPendingIntent(program));
+        sendAppointedWatchIntent(program, false, -1l);
     }
 
     private String setAppointedRecordProgram(Program currentProgram) {
@@ -1149,13 +1151,18 @@ public class ShortCutActivity extends Activity implements ListItemSelectedListen
         }
     }
 
-    private PendingIntent buildPendingIntent (Program program) {
+    private void sendAppointedWatchIntent (Program program, boolean add, long delay) {
         Intent intent = new Intent(DroidLogicTvUtils.ACTION_DROID_PROGRAM_WATCH_APPOINTED);
         intent.addFlags(0x01000000/*Intent.FLAG_RECEIVER_INCLUDE_BACKGROUND*/);
+        intent.setData(TvContract.buildProgramUri(program.getId()));
+        intent.setClassName("com.droidlogic.droidlivetv", "com.droidlogic.droidlivetv.shortcut.AppointedProgramReceiver");
         intent.putExtra(DroidLogicTvUtils.EXTRA_PROGRAM_ID, program.getId());
         intent.putExtra(DroidLogicTvUtils.EXTRA_CHANNEL_ID, program.getChannelId());
-        //sendBroadcast(intent);
-        return PendingIntent.getBroadcast(this, (int)program.getId(), intent, 0);
+        intent.putExtra(DroidLogicTvUtils.EXTRA_APPOINTED_DELAY, delay);
+        intent.putExtra(DroidLogicTvUtils.EXTRA_APPOINTED_SETTING, true);
+        intent.putExtra(DroidLogicTvUtils.EXTRA_APPOINTED_ACTION, add);
+        sendBroadcast(intent);
+        Log.d(TAG, "sendSettingAppointedWatchIntent intent = " + intent);
     }
 
     private void sendSchedulerIntent (Program program, boolean add) {
