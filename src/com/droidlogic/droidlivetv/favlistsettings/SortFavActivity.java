@@ -217,7 +217,6 @@ public class SortFavActivity extends Activity {
         LOG(LOGD, null, "dealAction = " + action);
         mCurrentActionId = action;
         switch (action) {
-            case ACTION_CHANNEL_SORT_ALL:
             case ACTION_FUNVTION_FIND:
                 mLeftTitle.setText(R.string.channel_list_all);
                 if (mAllListView.getVisibility() != View.VISIBLE) {
@@ -234,6 +233,7 @@ public class SortFavActivity extends Activity {
                 }
                 dealActionUI(action);
                 break;
+            case ACTION_CHANNEL_SORT_ALL:
             case ACTION_CHANNEL_SORT_AZ:
             case ACTION_CHANNEL_SORT_TP:
             case ACTION_CHANNEL_SORT_NETWORKID:
@@ -352,10 +352,24 @@ public class SortFavActivity extends Activity {
     private void dealActionUI(int action) {
         LOG(LOGD, null, "dealActionUI = " + action);
         switch (action) {
-            case ACTION_CHANNEL_SORT_ALL:
+            case ACTION_CHANNEL_SORT_ALL:{
                 mLeftTitle.setText(R.string.channel_list_all);
-                mAllListView.updateAllItem(this, mChannelDataManager.getChannelListItem(mInputId));
+                //mAllListView.updateAllItem(this, mChannelDataManager.getChannelListItem(mInputId));
+                mSortListView.updateAllItem(this, mChannelDataManager.getChannelServiceTypeListItem(mInputId));
+                mSortListView.setSelection(0);
+                mSortListView.requestFocus();
+                ItemAdapter adapter = (ItemAdapter) mSortListView.getAdapter();
+                ChannelListItem item = null;
+                String key = null;
+                if (adapter != null && adapter.getCount() > 0) {
+                    item = (ChannelListItem) adapter.getItem(0);
+                }
+                if (item != null) {
+                    key = item.getKey();
+                }
+                mContentListView.updateAllItem(this, mChannelDataManager.getChannelListItemByType(mInputId, key));
                 break;
+            }
             case ACTION_CHANNEL_SORT_AZ:{
                 mLeftTitle.setText(R.string.channel_list_all);
                 mSortListView.updateAllItem(this, mChannelDataManager.getAZSortKeyChannelListItem(mInputId));
@@ -418,14 +432,15 @@ public class SortFavActivity extends Activity {
                 }*/
                 mCustomedDialogView.creatSortOrderDialog().show();
                 break;
-            case ACTION_FUNVTION_FIND:
+            case ACTION_FUNVTION_FIND: {
                 mLeftTitle.setText(R.string.channel_search_result);
                 mAllListView.updateAllItem(this, mChannelDataManager.getMatchedSortChannelListItemByName(mInputId, ""));
                 mAllListView.setSelection(0);
                 mAllListView.requestFocus();
                 mCustomedDialogView.creatSeachChannelDialog().show();
                 break;
-            case ACTION_FUNVTION_ADD_FAV:
+            }
+            case ACTION_FUNVTION_ADD_FAV: {
                 if (mRightShowContainner.getVisibility() == View.VISIBLE && mCurrentEditChannelList != null && mCurrentEditChannelIndex > -1 && mCurrentEditChannelId > -1) {
                     ItemAdapter adapter = null;
                     if (TextUtils.equals(mCurrentEditChannelList, LIST_ALL_CHANNEL)) {
@@ -440,7 +455,8 @@ public class SortFavActivity extends Activity {
                     }
                 }
                 break;
-            case ACTION_FUNVTION_SATELLITE:
+            }
+            case ACTION_FUNVTION_SATELLITE: {
                 mLeftTitle.setText(R.string.channel_list_all);
                 mSortListView.updateAllItem(this, mChannelDataManager.getSatelliteSortKeyChannelListItem(mInputId));
                 mSortListView.setSelection(0);
@@ -456,11 +472,13 @@ public class SortFavActivity extends Activity {
                 }
                 mContentListView.updateAllItem(this, mChannelDataManager.getSatelliteSortChannelListItemByName(mInputId, satellite));
                 break;
-            case ACTION_FUNVTION_FAVLIST:
+            }
+            case ACTION_FUNVTION_FAVLIST: {
                 mFavListView.updateAllItem(this, mChannelDataManager.getFavListItem());
                 mFavListView.requestFocus();
                 mFavListView.setSelection(0);
                 break;
+            }
             default:
                 break;
 
@@ -519,29 +537,32 @@ public class SortFavActivity extends Activity {
         mAllListView = (ChannelListListView)findViewById(R.id.sort_channel_all);
         mFavListView = (FavListListView) findViewById(R.id.favourite);
         mRightShowContainner = (LinearLayout) findViewById(R.id.right_show);
-        ItemAdapter adapter = null;
-        adapter = new ItemAdapter(mChannelDataManager.getChannelListItem("adtv"), this, ChannelListItem.class.getSimpleName());
-        mAllListView.setAdapter(adapter);
-        if (adapter != null && adapter.getCount() > 0) {
-            mAllListView.requestFocus();
-        }
-
-        mAllListView.setVisibility(View.VISIBLE);
-        mSortListView.setVisibility(View.GONE);
-        mContentListView.setVisibility(View.GONE);
-
-        //adapter = new ItemAdapter(mChannelDataManager.getFavListItem(), this, FavListItem.class.getSimpleName());
-        //mFavListView.setAdapter(adapter);
-        mRightShowContainner.setVisibility(View.GONE);
-        //mFavListView.setVisibility(View.GONE);
-
         mCustomedDialogView = new CustomedDialogView(this, mDialogCallback);
+
+        setTvandRadioAsDefault();
         setListener();
-        /*mAllListView.setSelection(2);
-        mFavListView.setSelection(5);
-        mAllListView.clearFocus();
-        mFavListView.clearFocus();
-        mAllButton.requestFocus();*/
+    }
+
+    private void setTvandRadioAsDefault() {
+        //statrt init all video and radio
+        mAllListView.setVisibility(View.GONE);
+        mSortListView.setVisibility(View.VISIBLE);
+        mContentListView.setVisibility(View.VISIBLE);
+        mRightShowContainner.setVisibility(View.GONE);
+        mLeftTitle.setText(R.string.channel_list_all);
+        mSortListView.updateAllItem(this, mChannelDataManager.getChannelServiceTypeListItem(mInputId));
+        mSortListView.setSelection(0);
+        mSortListView.requestFocus();
+        ItemAdapter adapter = (ItemAdapter) mSortListView.getAdapter();
+        ChannelListItem item = null;
+        String key = null;
+        if (adapter != null && adapter.getCount() > 0) {
+            item = (ChannelListItem) adapter.getItem(0);
+        }
+        if (item != null) {
+            key = item.getKey();
+        }
+        mContentListView.updateAllItem(this, mChannelDataManager.getChannelListItemByType(mInputId, key));
     }
 
     private void setListener() {
@@ -1026,7 +1047,7 @@ public class SortFavActivity extends Activity {
         if (parent != null && parent instanceof ChannelListListView) {
             ChannelListItem item = (ChannelListItem)parent.getItemAtPosition(position);
             mCurrentEditChannelId = item.getChannelId();
-			String satellitename = item.getSatellite();
+            String satellitename = item.getSatellite();
             mSatellite.setText(TextUtils.isEmpty(satellitename) ? item.getChannelType() : satellitename);
             mTransponder.setText(item.getTranponder());
             if (mRightShowContainner.getVisibility() == View.VISIBLE && mCurrentEditChannelList != null && mCurrentEditChannelIndex > -1 && mCurrentEditChannelId > -1) {
@@ -1066,6 +1087,15 @@ public class SortFavActivity extends Activity {
                 sortKeyType = sortKeyItem.getItemType();
                 key = sortKeyItem.getKey();
                 switch (sortKeyType) {
+                    case ACTION_CHANNEL_SORT_ALL:
+                        mContentListView.updateAllItem(this, mChannelDataManager.getChannelListItemByType(mInputId, key));
+                        mContentListView.setSelection(0);
+                        if (mRightShowContainner.getVisibility() == View.VISIBLE && LIST_CHANNEL_FAV_LIST.equals(mCurrentFavlList)) {
+                            if (mContentListView.getVisibility() == View.VISIBLE && !mContentListView.hasFocus() && mContentListView.getAdapter() != null && mContentListView.getAdapter().getCount() > 0) {
+                                updateEditChannelInfo(mContentListView, R.id.sort_channel, mContentListView.getPositionForView(mContentListView.getSelectedView()));
+                            }
+                        }
+                        break;
                     case ACTION_CHANNEL_SORT_AZ:
                         mContentListView.updateAllItem(this, mChannelDataManager.getAZSortChannelListItemByStartedAlphabet(mInputId, key));
                         mContentListView.setSelection(0);

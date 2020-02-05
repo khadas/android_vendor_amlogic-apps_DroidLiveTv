@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.text.TextUtils;
 import android.util.Log;
 import android.provider.Settings;
+import android.media.tv.TvContract;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -40,6 +41,7 @@ public class ChannelDataManager {
     public static final String KEY_SETTINGS_CHANNEL_CONTAINER_TYPE = "container_type";
     public static final String KEY_SETTINGS_CHANNEL_ID = "channel_id";
     public static final String KEY_SETTINGS_CHANNEL_TYPE = "channel_type";
+    public static final String KEY_SETTINGS_CHANNEL_SERVICE_TYPE = "channel_service_type";
     public static final String KEY_SETTINGS_CHANNEL_FREQUENCY = "channel_frequency";
     public static final String KEY_SETTINGS_CHANNEL_ITEM_KEY = "item_key";
     public static final String KEY_SETTINGS_CHANNEL_TRANSPONDER = "channel_transponder";
@@ -145,6 +147,7 @@ public class ChannelDataManager {
                     childObj.put(KEY_SETTINGS_CHANNEL_CONTAINER_TYPE, Item.CONTAINER_ITEM_ALL_CHANNEL);
                     childObj.put(KEY_SETTINGS_CHANNEL_ID, singleChannel.getId());
                     childObj.put(KEY_SETTINGS_CHANNEL_TYPE, singleChannel.getType());
+                    childObj.put(KEY_SETTINGS_CHANNEL_SERVICE_TYPE, singleChannel.getServiceType());
                     result.add(childObj.toString());
                     Log.i(TAG, "getChannelRawDataFromDatabase add childObj = " + childObj.toString());
                 } catch (JSONException e) {
@@ -239,7 +242,76 @@ public class ChannelDataManager {
         return result;
     }
 
+    public LinkedList<Item> getChannelServiceTypeListItem(String inputId) {
+        LinkedList<Item> result = new LinkedList<Item>();
+        ChannelListItem item = null;
+        JSONObject obj = null;
+        final String[] CHANNEL_SERVICE_TYPE = {TvContract.Channels.SERVICE_TYPE_AUDIO_VIDEO,
+                TvContract.Channels.SERVICE_TYPE_AUDIO,
+                TvContract.Channels.SERVICE_TYPE_OTHER};
+        final int[] CHANNEL_SERVICE_TYPE_DISPLAY = {R.string.service_type_tv,
+                R.string.service_type_radio,
+                R.string.service_type_other};
 
+        obj = null;
+        for (int i = 0; i < CHANNEL_SERVICE_TYPE.length; i++) {
+            obj = new JSONObject();
+            try {
+                obj.put(KEY_SETTINGS_CHANNEL_ITEM_KEY, CHANNEL_SERVICE_TYPE[i]);
+                obj.put(KEY_SETTINGS_CHANNEL_ITEM_TYPE, Item.ACTION_CHANNEL_SORT_ALL);
+                obj.put(KEY_SETTINGS_CHANNEL_CONTAINER_TYPE, Item.CONTAINER_ITEM_SORT_KEY);
+            } catch (JSONException e) {
+                Log.d(TAG, "getChannelServiceTypeListItem JSONException = " + e);
+                e.printStackTrace();
+            }
+            item = new ChannelListItem(mContext, mContext.getResources().getString(CHANNEL_SERVICE_TYPE_DISPLAY[i]), false, obj.toString());
+            result.add(item);
+        }
+        return result;
+    }
+
+    /*
+    *serviceType can be SERVICE_TYPE_AUDIO_VIDEO or SERVICE_TYPE_AUDIO or SERVICE_TYPE_OTHER
+    */
+    public LinkedList<Item> getChannelListItemByType(String inputId, String serviceType) {
+        LinkedList<Item> result = new LinkedList<Item>();
+        List<String> list = getChannelList(inputId);
+        if (list != null && list.size() > 0) {
+            Iterator<String> iterator = list.iterator();
+            JSONObject jsonObj = null;
+            Item item = null;
+            int count = 1;
+            while (iterator.hasNext()) {
+                String objStr = (String)iterator.next();
+                if (!TextUtils.isEmpty(objStr)) {
+                    try {
+                        jsonObj = new JSONObject(objStr);
+                        if (jsonObj != null && jsonObj.length() > 0) {
+                            String favArrayStr = jsonObj.getString(KEY_SETTINGS_CHANNEL_FAV_INDEX);
+                            String channelServiceType = jsonObj.getString(KEY_SETTINGS_CHANNEL_SERVICE_TYPE);
+                            if (!TextUtils.equals(serviceType, channelServiceType)) {
+                                //need to filter by servie type
+                                continue;
+                            }
+                            JSONArray favArray = new JSONArray(favArrayStr);
+                            boolean isFaved = false;
+                            if (favArray != null && favArray.length() > 0) {
+                                isFaved = true;
+                            }
+                            item = new ChannelListItem(mContext, /*String.valueOf(count) + "    " + */jsonObj.getString(KEY_SETTINGS_CHANNEL_NAME), isFaved, jsonObj.toString());
+                            result.add(item);
+                            count++;
+                        }
+                    } catch (JSONException e) {
+                        Log.d(TAG, "getChannelListItemByType JSONException = " + e);
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+        Log.d(TAG, "getChannelListItemByType result size = " + result.size());
+        return result;
+    }
 
     public LinkedList<Item> getAZSortKeyChannelListItem(String inputId) {
         LinkedList<Item> result = new LinkedList<Item>();
