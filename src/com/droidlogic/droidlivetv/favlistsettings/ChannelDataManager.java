@@ -59,6 +59,8 @@ public class ChannelDataManager {
     public static final String KEY_SATALLITE = "key_satallite";
     public static final String KEY_TRANSPONDER = "key_transponder";
 
+    public static final String PACKAGE_DTVKIT = "org.dtvkit.inputsource";
+
     private String mInputId = null;
     private TvDataBaseManager mTvDataBaseManager = null;
 
@@ -133,20 +135,24 @@ public class ChannelDataManager {
             Iterator it = allList.iterator();
             while (it.hasNext()) {
                 singleChannel = (ChannelInfo)it.next();
+                if ((!singleChannel.isOtherChannel() && !singleChannel.isBrowsable()) || (singleChannel.isOtherChannel() && singleChannel.getHidden() == 1)) {
+                    //hide not browsable channel
+                    continue;
+                }
                 childObj = new JSONObject();
                 try {
                     childObj.put(KEY_SETTINGS_CHANNEL_NAME, singleChannel.getDisplayName() == null ? "" : singleChannel.getDisplayName());
                     childObj.put(KEY_SETTINGS_CHANNEL_NUMBER, singleChannel.getDisplayNumber() == null ? "" : singleChannel.getDisplayNumber());
                     childObj.put(KEY_SETTINGS_CHANNEL_FREQUENCY, singleChannel.getFrequency());
                     childObj.put(KEY_SETTINGS_CHANNEL_NETWORK_ID, singleChannel.getOriginalNetworkId());
-                    childObj.put(KEY_SETTINGS_CHANNEL_SATELLITE, TextUtils.isEmpty(singleChannel.getSatelliteName()) ? singleChannel.getType() : singleChannel.getSatelliteName());
+                    childObj.put(KEY_SETTINGS_CHANNEL_SATELLITE, singleChannel.getSatelliteName());
                     childObj.put(KEY_SETTINGS_CHANNEL_TRANSPONDER, TextUtils.isEmpty(singleChannel.getTransponderDisplay()) ? (singleChannel.getFrequency() + "Hz") : singleChannel.getTransponderDisplay());
                     childObj.put(KEY_SETTINGS_CHANNEL_IS_FAVOURITE, singleChannel.hasSetFavourite());
                     childObj.put(KEY_SETTINGS_CHANNEL_FAV_INDEX, TextUtils.isEmpty(singleChannel.getFavouriteInfo()) ? new JSONArray().toString() : singleChannel.getFavouriteInfo());
                     childObj.put(KEY_SETTINGS_CHANNEL_ITEM_TYPE, Item.ACTION_CHANNEL_SORT_ALL);
                     childObj.put(KEY_SETTINGS_CHANNEL_CONTAINER_TYPE, Item.CONTAINER_ITEM_ALL_CHANNEL);
                     childObj.put(KEY_SETTINGS_CHANNEL_ID, singleChannel.getId());
-                    childObj.put(KEY_SETTINGS_CHANNEL_TYPE, singleChannel.getType());
+                    childObj.put(KEY_SETTINGS_CHANNEL_TYPE, singleChannel.getChannelSignalType() != null ? singleChannel.getChannelSignalType() : singleChannel.getType());
                     childObj.put(KEY_SETTINGS_CHANNEL_SERVICE_TYPE, singleChannel.getServiceType());
                     result.add(childObj.toString());
                     Log.i(TAG, "getChannelRawDataFromDatabase add childObj = " + childObj.toString());

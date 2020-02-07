@@ -49,6 +49,7 @@ public class SortFavActivity extends Activity {
     private Button mTPButton;
     private Button mNetWorkIdButton;
     private Button mExtraSortButton;
+    private TextView mSatelliteText;
     private TextView mSatellite;
     private TextView mTransponder;
 
@@ -524,6 +525,7 @@ public class SortFavActivity extends Activity {
         mTPButton = (Button)findViewById(R.id.yellow_sort_button);
         mNetWorkIdButton = (Button)findViewById(R.id.blue_sort_button);
         mExtraSortButton = (Button)findViewById(R.id.sort_sort_button);
+        mSatelliteText = (TextView)findViewById(R.id.sat_text);
         mSatellite = (TextView)findViewById(R.id.sat);
         mTransponder = (TextView)findViewById(R.id.trans);
 
@@ -1048,7 +1050,13 @@ public class SortFavActivity extends Activity {
             ChannelListItem item = (ChannelListItem)parent.getItemAtPosition(position);
             mCurrentEditChannelId = item.getChannelId();
             String satellitename = item.getSatellite();
-            mSatellite.setText(TextUtils.isEmpty(satellitename) ? item.getChannelType() : satellitename);
+            if (TextUtils.isEmpty(satellitename)) {
+                mSatelliteText.setVisibility(View.GONE);
+                satellitename = item.getChannelType();
+            } else {
+                mSatelliteText.setVisibility(View.VISIBLE);
+            }
+            mSatellite.setText(satellitename);
             mTransponder.setText(item.getTranponder());
             if (mRightShowContainner.getVisibility() == View.VISIBLE && mCurrentEditChannelList != null && mCurrentEditChannelIndex > -1 && mCurrentEditChannelId > -1) {
                 ItemAdapter adapter = null;
