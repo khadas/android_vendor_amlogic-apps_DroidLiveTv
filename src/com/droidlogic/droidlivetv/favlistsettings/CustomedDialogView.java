@@ -28,12 +28,14 @@ import com.droidlogic.droidlivetv.R;
 
 public class CustomedDialogView {
     private static final String TAG = CustomedDialogView.class.getSimpleName();
+    private static final boolean DEBUG = true;
 
     private Context mContext;
     private DialogCallback mDialogCallback;
 
     public static final String DIALOG_ACTION = "dialog_action";
     public static final String DIALOG_EVENT = "dialog_event";
+    public static final String DIALOG_ACTION_FLAG = "dialog_action_flag";
     public static final String DIALOG_LIST_POSITION = "list_position";
     public static final String DIALOG_ACTION_SORT_LIST_CLICKED = "sort_list_clicked";
     public static final String DIALOG_ACTION_EXIT = "exit";
@@ -43,7 +45,7 @@ public class CustomedDialogView {
     public static final String DIALOG_ACTION_EDIT_FAV_CLICKED = "edit_fav_clicked";
     public static final String DIALOG_ACTION_EDIT_FAV_OK_CLICKED = "edit_fav_ok_clicked";
     public static final String DIALOG_ACTION_FAV_EDIT_VALUE = "fav_edit_value";
-
+    public static final String DIALOG_ACTION_FAV_PREVIOUS_VALUE = "fav_edit_previous_value";
 
     public static final int[] SORT_ITEM = {R.string.sort_a_z, R.string.sort_z_a};
     public static final int FLAG_SORT_ITEM_AZ = 0;
@@ -189,6 +191,7 @@ public class CustomedDialogView {
         final ListView list = dialogView.findViewById(R.id.dialog_listview);
         final LinearLayout container = dialogView.findViewById(R.id.dialog_list_editname_container);
         final MyAdapter myAdapter = new MyAdapter(mContext,itemList);
+        final int[] FLAG = {FLAG_EDIT_FAV_ADD};
 
         title.setVisibility(View.VISIBLE);
         title.setText(R.string.edit_fav_list);
@@ -212,8 +215,12 @@ public class CustomedDialogView {
         list.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (DEBUG) {
+                    Log.d(TAG, "onItemSelected view = " + view + ", position = " + position);
+                }
                 switch (position) {
                     case FLAG_EDIT_FAV_ADD:
+                        FLAG[0] = FLAG_EDIT_FAV_ADD;
                         if (container.getVisibility() != View.VISIBLE) {
                             container.setVisibility(View.VISIBLE);
                         }
@@ -231,6 +238,7 @@ public class CustomedDialogView {
                         edit.setHint(R.string.edit_fav_list_add_type_in_description);
                         break;
                     case FLAG_EDIT_FAV_DEL:{
+                        FLAG[0] = FLAG_EDIT_FAV_DEL;
                         if (container.getVisibility() != View.VISIBLE) {
                             container.setVisibility(View.VISIBLE);
                         }
@@ -247,9 +255,11 @@ public class CustomedDialogView {
                         String timeTip = String.format(temp, (favItem != null ? favItem.getTitle() : ""));
                         info.setText(timeTip);
                         edit.setText("");
+                        edit.setHint("");
                         break;
                     }
                     case FLAG_EDIT_FAV_EDIT:{
+                        FLAG[0] = FLAG_EDIT_FAV_EDIT;
                         if (container.getVisibility() != View.VISIBLE) {
                             container.setVisibility(View.VISIBLE);
                         }
@@ -267,10 +277,11 @@ public class CustomedDialogView {
                         String timeTip = String.format(temp, (favItem != null ? favItem.getTitle() : ""));
                         info.setText(timeTip);
                         edit.setText("");
-                        edit.setHint(favItem != null ? favItem.getTitle() : "");
+                        edit.setHint(R.string.edit_fav_list_add_type_in_description);
                         break;
                     }
                     default:
+                        FLAG[0] = FLAG_EDIT_FAV_EDIT;
                         break;
                 }
             }
@@ -284,17 +295,49 @@ public class CustomedDialogView {
             @Override
             public void onClick(View v) {
                 if (mDialogCallback != null) {
-                    alertDialog.dismiss();
                     Bundle bundle = new Bundle();
                     bundle.putBoolean(DIALOG_ACTION, true);
                     bundle.putString(DIALOG_EVENT, DIALOG_ACTION_EDIT_FAV_OK_CLICKED);
+                    bundle.putInt(DIALOG_ACTION_FLAG, FLAG[0]);
                     Editable editable = edit.getText();
                     bundle.putString(DIALOG_ACTION_FAV_EDIT_VALUE, !TextUtils.isEmpty(editable) ? editable.toString() : "");
-                    if (TextUtils.isEmpty(editable)) {
-                        Toast.makeText(mContext,R.string.edit_fav_list_name_invalid, Toast.LENGTH_SHORT);
-                        return;
+                    bundle.putString(DIALOG_ACTION_FAV_PREVIOUS_VALUE, (favItem != null ? favItem.getTitle() : ""));
+                    ChannelDataManager channelDataManager = new ChannelDataManager(mContext);
+                    edit.setText("");
+                    if (FLAG[0] == FLAG_EDIT_FAV_ADD) {
+                        if (channelDataManager.getFavGroupPageCount() >= 64) {
+                            Log.d(TAG, "rename onClick add limit is 64");
+                            Toast.makeText(mContext,R.string.edit_fav_list_name_limit, Toast.LENGTH_SHORT);
+                            edit.setHint(R.string.edit_fav_list_name_limit);
+                            return;
+                        } else if (editable == null || (editable != null && TextUtils.isEmpty(editable.toString()))) {
+                            Toast.makeText(mContext,R.string.edit_fav_list_name_invalid, Toast.LENGTH_SHORT);
+                            edit.setHint(R.string.edit_fav_list_name_invalid);
+                            Log.d(TAG, "rename onClick add invalid fav page");
+                            return;
+                        } else if (channelDataManager.isFavGroupExist(editable != null ? editable.toString() : null)) {
+                            Toast.makeText(mContext,R.string.edit_fav_list_name_exist, Toast.LENGTH_SHORT);
+                            edit.setHint(R.string.edit_fav_list_name_exist);
+                            Log.d(TAG, "rename onClick add fav page exist");
+                            return;
+                        }
+                    } else if (FLAG[0] == FLAG_EDIT_FAV_DEL) {
+                        Log.d(TAG, "rename onClick del fav page");
+                    } else if (FLAG[0] == FLAG_EDIT_FAV_EDIT) {
+                        if (editable == null || (editable != null && TextUtils.isEmpty(editable.toString()))) {
+                            Toast.makeText(mContext,R.string.edit_fav_list_name_invalid, Toast.LENGTH_SHORT);
+                            edit.setHint(R.string.edit_fav_list_name_invalid);
+                            Log.d(TAG, "rename onClick edit invalid fav page");
+                            return;
+                        } else if (channelDataManager.isFavGroupExist(editable != null ? editable.toString() : null)) {
+                            Toast.makeText(mContext,R.string.edit_fav_list_name_exist, Toast.LENGTH_SHORT);
+                            edit.setHint(R.string.edit_fav_list_name_exist);
+                            Log.d(TAG, "rename onClick edit fav page exist");
+                            return;
+                        }
                     }
                     mDialogCallback.onDialogEvent(bundle);
+                    alertDialog.dismiss();
                 }
             }
         });

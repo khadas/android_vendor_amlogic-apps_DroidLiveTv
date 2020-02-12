@@ -95,7 +95,7 @@ public class FavListItem extends Item {
         if (!TextUtils.equals(getFavListType(), Item.LIST_EDIT_ALL_FAV_LIST)) {
             return mContext.getDrawable(R.drawable.ic_star_white);
         } else {
-            return mContext.getDrawable(R.drawable.edit_fav_icon);
+            return mContext.getDrawable(R.drawable.ic_right_white/*R.drawable.edit_fav_icon*/);
         }
     }
 
@@ -111,7 +111,7 @@ public class FavListItem extends Item {
             if (!TextUtils.equals(getFavListType(), Item.LIST_EDIT_ALL_FAV_LIST)) {
                 obj = new JSONObject(addIconTextView(R.id.icon_text, R.drawable.ic_star_white));
             } else {
-                obj = new JSONObject(addIconTextView(R.id.icon_text, R.drawable.edit_fav_icon));
+                obj = new JSONObject(addIconTextView(R.id.icon_text, R.drawable.ic_right_white/*R.drawable.edit_fav_icon*/));
             }
             array.put(obj);
         } catch (JSONException e) {
@@ -123,7 +123,7 @@ public class FavListItem extends Item {
         return result;
     }
 
-    public int getFavId() {
+    /*public int getFavId() {
         int result = -1;
         try {
             if (mJSONObject != null && mJSONObject.length() > 0) {
@@ -134,7 +134,7 @@ public class FavListItem extends Item {
             e.printStackTrace();
         }
         return result;
-    }
+    }*/
 
     /*public boolean isAllFavList() {
         boolean result = false;

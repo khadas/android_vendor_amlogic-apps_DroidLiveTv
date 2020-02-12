@@ -42,7 +42,12 @@ public class ChannelListListView extends CustomedListView {
                     Bundle bundle = new Bundle();
                     bundle.putInt(KEY_ACTION_CODE, keyCode);
                     bundle.putString(KEY_LIST_TYPE, mListType);
-                    mKeyEventListener.onKeyEventCallbak(bundle);
+                    ItemAdapter adapter = (ItemAdapter)this.getAdapter();
+                    Item item = null;
+                    if (adapter != null && adapter.getCount() > 0) {
+                        item = adapter.getItem(this.getSelectedItemPosition());
+                    }
+                    mKeyEventListener.onKeyEventCallbak(item, bundle);
                     return true;
                 }
                 break;

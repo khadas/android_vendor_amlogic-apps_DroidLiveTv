@@ -31,6 +31,7 @@ import com.droidlogic.droidlivetv.R;
 
 public class ChannelDataManager {
     private static final String TAG = "ChannelDataManager";
+    private static final boolean DEBUG = true;
     private Context mContext;
     private ContentResolver mContentResolver;
     private static final String KEY_SETTINGS_FAVLIST = "settings_favlist";
@@ -112,7 +113,7 @@ public class ChannelDataManager {
                 array.put(childObj);
             }
         } catch (JSONException e) {
-            Log.d(TAG, "init64FavList JSONException = " + e);
+            Log.d(TAG, "initTestChannelList JSONException = " + e);
             e.printStackTrace();
         }
         if (array != null && array.length() > 0) {
@@ -155,7 +156,9 @@ public class ChannelDataManager {
                     childObj.put(KEY_SETTINGS_CHANNEL_TYPE, singleChannel.getChannelSignalType() != null ? singleChannel.getChannelSignalType() : singleChannel.getType());
                     childObj.put(KEY_SETTINGS_CHANNEL_SERVICE_TYPE, singleChannel.getServiceType());
                     result.add(childObj.toString());
-                    Log.i(TAG, "getChannelRawDataFromDatabase add childObj = " + childObj.toString());
+                    if (DEBUG) {
+                        Log.d(TAG, "getChannelRawDataFromDatabase add childObj = " + childObj.toString());
+                    }
                 } catch (JSONException e) {
                     Log.i(TAG, "getChannelRawDataFromDatabase JSONException = " + e.getMessage());
                 }
@@ -771,11 +774,16 @@ public class ChannelDataManager {
         JSONArray array = new JSONArray();
         String DEFAULTNAME = "Favorite";
         JSONObject childObj;
+        List<String> nameList = new ArrayList<String>();
         try {
             for (int i = 0; i < 64; i++) {
+                nameList.add(DEFAULTNAME + String.valueOf(i));
+            }
+            Collections.sort(nameList, new AscendComparator());
+            for (int i = 0; i < 64; i++) {
                 childObj = new JSONObject();
-                childObj.put(KEY_SETTINGS_FAV_NAME, DEFAULTNAME + String.valueOf(i));
-                childObj.put(KEY_SETTINGS_FAV_INDEX, i);
+                childObj.put(KEY_SETTINGS_FAV_NAME, nameList.get(i));
+                childObj.put(KEY_SETTINGS_FAV_INDEX, -1);
                 childObj.put(KEY_SETTINGS_FAV_IS_ADDED, false);
                 //childObj.put(KEY_SETTINGS_IS_ALL_FAV_LIST, true);
                 childObj.put(KEY_SETTINGS_FAV_LIST_TYPE, Item.LIST_ALL_FAV_LIST);
@@ -807,6 +815,7 @@ public class ChannelDataManager {
                 }
             }
         }
+        Collections.sort(result, new FavItemAscendComparator());
         return result;
     }
 
@@ -818,6 +827,7 @@ public class ChannelDataManager {
         } else {
             result = produceListFromJsonStr(jsonStr);
         }
+        Collections.sort(result, new FavItemAscendComparator());
         return result;
     }
 
@@ -842,6 +852,9 @@ public class ChannelDataManager {
             Item item = null;
             for (int i = 0; i < initArray.length(); i++) {
                 try {
+                    if (DEBUG) {
+                        //Log.d(TAG, "getFavListItem i = " + i + ", favitem = " + initArray.get(i));
+                    }
                     JSONObject obj = (JSONObject)initArray.get(i);
                     //Log.d(TAG, "getFavListItem jsonObj = " + obj.toString());
                     item = new FavListItem(mContext, obj.getString(KEY_SETTINGS_FAV_NAME), obj.getBoolean(KEY_SETTINGS_FAV_IS_ADDED), obj.toString());
@@ -876,6 +889,9 @@ public class ChannelDataManager {
             Item item = null;
             for (int i = 0; i < initArray.length(); i++) {
                 try {
+                    if (DEBUG) {
+                        //Log.d(TAG, "getEditFavListItem i = " + i + ", favitem = " + initArray.get(i));
+                    }
                     JSONObject obj = (JSONObject)initArray.get(i);
                     obj.put(KEY_SETTINGS_FAV_IS_ADDED, true);
                     obj.put(KEY_SETTINGS_FAV_LIST_TYPE, Item.LIST_EDIT_ALL_FAV_LIST);
@@ -891,6 +907,254 @@ public class ChannelDataManager {
         return result;
     }
 
+    public void removeFavGroup(String favName) {
+        List<String> allFavList = getFavList(null);
+        Iterator<String> iterator = allFavList.iterator();
+        String single = null;
+        JSONObject singleObj = null;
+        String name = null;
+        while (iterator.hasNext()) {
+            single = (String)iterator.next();
+            try {
+                singleObj = new JSONObject(single);
+                name = singleObj.getString(KEY_SETTINGS_FAV_NAME);
+                if (TextUtils.equals(favName, name)) {
+                    break;
+                } else {
+                    single = null;
+                }
+            } catch (JSONException e) {
+                Log.d(TAG, "removeFavGroup JSONException = " + e);
+                single = null;
+                e.printStackTrace();
+            }
+        }
+        if (!TextUtils.isEmpty(single)) {
+            allFavList.remove(single);
+            saveStringToXml(KEY_SETTINGS_FAVLIST, convertJsonObjectListToJsonStr(allFavList));
+            removeFavInAllChannel(favName);
+        } else {
+            Log.d(TAG, "removeFavGroup fail = " + favName);
+        }
+    }
+
+    private void removeFavInAllChannel(String favName) {
+        List<ChannelInfo> allList = mTvDataBaseManager.getChannelList(mInputId, ChannelInfo.COMMON_PROJECTION, null, null);
+        Map<Long, String> needUpdateList = new HashMap<Long, String>();
+        if (allList != null && allList.size() > 0) {
+            Iterator<ChannelInfo> iterator = allList.iterator();
+            ChannelInfo singleChannel = null;
+            String singleFavInfoStr = null;
+            JSONArray singleFavInfoArray = null;
+            String singleFavName = null;
+            while (iterator.hasNext()) {
+                singleChannel = (ChannelInfo)iterator.next();
+                singleFavInfoStr = TextUtils.isEmpty(singleChannel.getFavouriteInfo()) ? new JSONArray().toString() : singleChannel.getFavouriteInfo();
+                try {
+                    singleFavInfoArray = new JSONArray(singleFavInfoStr);
+                    if (singleFavInfoArray != null && singleFavInfoArray.length() > 0) {
+                        for (int i = 0; i < singleFavInfoArray.length(); i++) {
+                            try {
+                                singleFavName = (String)singleFavInfoArray.get(i);
+                                if (TextUtils.equals(singleFavName, favName)) {
+                                    singleFavInfoArray.remove(i);
+                                    needUpdateList.put(singleChannel.getId(), singleFavInfoArray.toString());
+                                    Log.d(TAG, "removeFavInAllChannel " + favName + " in " + singleChannel.getDisplayName());
+                                    break;
+                                }
+                            } catch (JSONException e) {
+                                Log.d(TAG, "removeFavInAllChannel JSONException = " + e);
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                } catch (JSONException e) {
+                    Log.d(TAG, "removeFavInAllChannel JSONException = " + e);
+                    e.printStackTrace();
+                }
+            }
+        }
+        if (needUpdateList != null && needUpdateList.size() > 0) {
+            Iterator<Map.Entry<Long, String>> iterator = needUpdateList.entrySet().iterator();
+            while (iterator.hasNext()) {
+                Map.Entry<Long, String> entry = iterator.next();
+                mTvDataBaseManager.updateSingleChannelInternalProviderData(entry.getKey(), ChannelInfo.KEY_FAVOURITE_INFO, entry.getValue());
+                if (DEBUG) {
+                    Log.d(TAG, "removeFavInAllChannel id = " + entry.getKey() + ", favInfo = " + entry.getValue());
+                }
+            }
+        }
+    }
+
+    public void addFavGroup(String favName) {
+        List<String> allFavList = getFavList(null);
+        Iterator<String> iterator = allFavList.iterator();
+        String single = null;
+        JSONObject childObj;
+        try {
+            childObj = new JSONObject();
+            childObj.put(KEY_SETTINGS_FAV_NAME, favName);
+            childObj.put(KEY_SETTINGS_FAV_INDEX, -1);
+            childObj.put(KEY_SETTINGS_FAV_IS_ADDED, false);
+            childObj.put(KEY_SETTINGS_FAV_LIST_TYPE, Item.LIST_ALL_FAV_LIST);
+            childObj.put(KEY_SETTINGS_CHANNEL_ITEM_TYPE, Item.ACTION_FUNVTION_FAVLIST);
+            childObj.put(KEY_SETTINGS_CHANNEL_CONTAINER_TYPE, Item.CONTAINER_ITEM_ALL_FAV);
+            single = childObj.toString();
+        } catch (JSONException e) {
+            Log.d(TAG, "addFavGroup JSONException = " + e);
+            single = null;
+            e.printStackTrace();
+        }
+        if (!TextUtils.isEmpty(single)) {
+            allFavList.add(single);
+            saveStringToXml(KEY_SETTINGS_FAVLIST, convertJsonObjectListToJsonStr(allFavList));
+            Log.d(TAG, "addFavGroup success favName = " + favName);
+        } else {
+            Log.d(TAG, "addFavGroup fail = " + favName);
+        }
+    }
+
+    public void renameFavGroup(String oldName, String newName) {
+        List<String> allFavList = getFavList(null);
+        Iterator<String> iterator = allFavList.iterator();
+        String single = null;
+        JSONObject singleObj = null;
+        String name = null;
+        while (iterator.hasNext()) {
+            single = (String)iterator.next();
+            try {
+                singleObj = new JSONObject(single);
+                name = singleObj.getString(KEY_SETTINGS_FAV_NAME);
+                if (TextUtils.equals(oldName, name)) {
+                    singleObj.put(KEY_SETTINGS_FAV_NAME, newName);
+                    break;
+                } else {
+                    single = null;
+                    singleObj = null;
+                }
+            } catch (JSONException e) {
+                Log.d(TAG, "removeFavGroup JSONException = " + e);
+                single = null;
+                singleObj = null;
+                e.printStackTrace();
+            }
+        }
+        if (!TextUtils.isEmpty(single) && singleObj != null) {
+            allFavList.remove(single);
+            allFavList.add(singleObj.toString());
+            saveStringToXml(KEY_SETTINGS_FAVLIST, convertJsonObjectListToJsonStr(allFavList));
+            renameFavInAllChannel(oldName, newName);
+            Log.d(TAG, "renameFavGroup success oldName = " + oldName + ", newName = " + newName);
+        } else {
+            Log.d(TAG, "renameFavGroup fail oldName = " + oldName + ", newName = " + newName);
+        }
+    }
+
+    private void renameFavInAllChannel(String oldName, String newName) {
+        List<ChannelInfo> allList = mTvDataBaseManager.getChannelList(mInputId, ChannelInfo.COMMON_PROJECTION, null, null);
+        Map<Long, String> needUpdateList = new HashMap<Long, String>();
+        if (allList != null && allList.size() > 0) {
+            Iterator<ChannelInfo> iterator = allList.iterator();
+            ChannelInfo singleChannel = null;
+            String singleFavInfoStr = null;
+            JSONArray singleFavInfoArray = null;
+            String singleFavName = null;
+            while (iterator.hasNext()) {
+                singleChannel = (ChannelInfo)iterator.next();
+                singleFavInfoStr = TextUtils.isEmpty(singleChannel.getFavouriteInfo()) ? new JSONArray().toString() : singleChannel.getFavouriteInfo();
+                try {
+                    singleFavInfoArray = new JSONArray(singleFavInfoStr);
+                    if (singleFavInfoArray != null && singleFavInfoArray.length() > 0) {
+                        for (int i = 0; i < singleFavInfoArray.length(); i++) {
+                            singleFavName = (String)singleFavInfoArray.get(i);
+                            if (TextUtils.equals(singleFavName, oldName)) {
+                                singleFavName = newName;
+                                singleFavInfoArray.remove(i);
+                                singleFavInfoArray.put(singleFavName);
+                                needUpdateList.put(singleChannel.getId(), singleFavInfoArray.toString());
+                                Log.d(TAG, "renameFavInAllChannel favpage " + oldName + " in " + singleChannel.getDisplayName() + " to " + newName);
+                                break;
+                            }
+                        }
+                    }
+                } catch (JSONException e) {
+                    Log.d(TAG, "renameFavInAllChannel JSONException = " + e);
+                    e.printStackTrace();
+                }
+            }
+        }
+        if (needUpdateList != null && needUpdateList.size() > 0) {
+            Iterator<Map.Entry<Long, String>> iterator = needUpdateList.entrySet().iterator();
+            while (iterator.hasNext()) {
+                Map.Entry<Long, String> entry = iterator.next();
+                mTvDataBaseManager.updateSingleChannelInternalProviderData(entry.getKey(), ChannelInfo.KEY_FAVOURITE_INFO, entry.getValue());
+                if (DEBUG) {
+                    Log.d(TAG, "renameFavInAllChannel id = " + entry.getKey() + ", favInfo = " + entry.getValue());
+                }
+            }
+        }
+    }
+
+    public boolean isFavGroupExist(String favName) {
+        boolean result = false;
+        List<String> allFavList = getFavList(null);
+        Iterator<String> iterator = allFavList.iterator();
+        String single = null;
+        JSONObject singleObj = null;
+        while (iterator.hasNext()) {
+            single = (String)iterator.next();
+            try {
+                singleObj = new JSONObject(single);
+                if (TextUtils.equals(favName, singleObj.getString(KEY_SETTINGS_FAV_NAME))) {
+                    result = true;
+                    break;
+                }
+            } catch (JSONException e) {
+                Log.d(TAG, "isFavGroupExist JSONException = " + e);
+                e.printStackTrace();
+            }
+        }
+        Log.d(TAG, "isFavGroupExist " + favName + " exist = " + result);
+        return result;
+    }
+
+    public int getFavGroupPageCount() {
+        int result = 0;
+        List<String> allFavList = getFavList(null);
+        if (allFavList != null && allFavList.size() > 0) {
+            result = allFavList.size();
+        }
+        Log.d(TAG, "getFavGroupPageCount " + result);
+        return result;
+    }
+
+    public int getFavGroupPageIndex(String favName) {
+        int result = 0;
+        List<String> allFavList = getFavList(null);
+        if (allFavList != null && allFavList.size() > 0 && !TextUtils.isEmpty(favName)) {
+            Iterator<String> iterator = allFavList.iterator();
+            String single = null;
+            JSONObject singleObj = null;
+            int index = 0;
+            while (iterator.hasNext()) {
+                single = (String)iterator.next();
+                try {
+                    singleObj = new JSONObject(single);
+                    if (TextUtils.equals(favName, singleObj.getString(KEY_SETTINGS_FAV_NAME))) {
+                        result = index;
+                        break;
+                    }
+                } catch (JSONException e) {
+                    Log.d(TAG, "getFavGroupPageIndex JSONException = " + e);
+                    e.printStackTrace();
+                }
+                index++;
+            }
+        }
+        Log.d(TAG, "getFavGroupPageIndex " + favName + " result = " + result);
+        return result;
+    }
+
     private List<String> getFavList() {
         List<String> result = new ArrayList<String>();
         JSONArray array = null;
@@ -900,6 +1164,7 @@ public class ChannelDataManager {
         } else {
             result = produceListFromJsonStr(jsonStr);
         }
+        Collections.sort(result, new FavItemAscendComparator());
         return result;
     }
 
@@ -923,7 +1188,8 @@ public class ChannelDataManager {
         if (initArray != null && initArray.length() > 0) {
             Log.d(TAG, "getChannelFavListItem length = " + initArray.length());
             Item item = null;
-            List<Integer> channelFav = chanelItem.getFavAllIndex();
+            //List<Integer> channelFav = chanelItem.getFavAllIndex();
+            List<String> channelFav = chanelItem.getFavAllIndex();
             for (int i = 0; i < initArray.length(); i++) {
                 try {
                     JSONObject obj = (JSONObject)initArray.get(i);
@@ -932,7 +1198,8 @@ public class ChannelDataManager {
                     //Log.d(TAG, "getChannelFavListItem jsonObj = " + obj.toString());
                     boolean isFavSelected = false;
                     if (channelFav != null && channelFav.size() > 0) {
-                        if (channelFav.indexOf(Integer.valueOf(i)) > -1) {
+                        String oneFavName = obj.getString(KEY_SETTINGS_FAV_NAME);
+                        if (channelFav.indexOf(oneFavName) > -1) {
                             isFavSelected = true;
                         }
                     }
@@ -947,7 +1214,7 @@ public class ChannelDataManager {
         return result;
     }
 
-    public LinkedList<Item> getChannelItemByFavPage(int favId) {
+    public LinkedList<Item> getChannelItemByFavPage(String favName) {
         LinkedList<Item> result = new LinkedList<Item>();
         LinkedList<Item> listItem = getChannelListItemWithoutIndex("");
         if (listItem != null && listItem.size() > 0) {
@@ -957,7 +1224,7 @@ public class ChannelDataManager {
             //String channelObjjsonSrt = null;
             ChannelListItem oneItem = null;
             boolean hasFav = false;
-            List<Integer> favInfoList = null;
+            List<String> favInfoList = null;
             int count = 1;
             while (iterator.hasNext()) {
                 hasFav = false;
@@ -965,7 +1232,7 @@ public class ChannelDataManager {
                 favInfoList = oneItem.getFavAllIndex();
                 if (favInfoList != null && favInfoList.size() > 0) {
                     for (int i = 0; i < favInfoList.size(); i++) {
-                        if (favId == (int)favInfoList.get(i)) {
+                        if (TextUtils.equals(favName, favInfoList.get(i))) {
                             hasFav = true;
                             oneItem = new ChannelListItem(mContext, (/*String.valueOf(count) + "    " + */oneItem.getTitle()), hasFav, oneItem.getJSONObject().toString());
                             result.add(oneItem);
@@ -978,45 +1245,6 @@ public class ChannelDataManager {
         }
         return result;
     }
-
-    /*public LinkedList<Item> getChannelItemByFavPage(int favId) {
-        LinkedList<Item> result = new LinkedList<Item>();
-        List<String> list = getChannelList("");
-        LinkedList<Item> listItem = getChannelListItemWithoutIndex("");
-        if (list != null && list.size() > 0) {
-            Iterator<String> iterator = list.iterator();
-            JSONObject obj = null;
-            JSONArray array = null;
-            String channelObjjsonSrt = null;
-            ChannelListItem oneItem = null;
-            boolean hasFav = false;
-            while (iterator.hasNext()) {
-                hasFav = false;
-                channelObjjsonSrt = (String)iterator.next();
-                try {
-                    obj = new JSONObject(channelObjjsonSrt);
-                    if (obj != null && obj.length() > 0) {
-                        array = new JSONArray(obj.getString(KEY_SETTINGS_CHANNEL_FAV_INDEX));
-                    }
-                    if (array != null && array.length() > 0) {
-                        for (int i = 0; i < array.length(); i++) {
-                            if (favId == (int)array.get(i)) {
-                                hasFav = true;
-                                oneItem = new ChannelListItem(mContext, obj.getString(KEY_SETTINGS_CHANNEL_NAME), hasFav, obj.toString());
-                                result.add(oneItem);
-                                break;
-                            }
-                        }
-                    }
-                } catch (JSONException e) {
-                    Log.d(TAG, "getChannelItemByFavPage JSONException = " + e);
-                    e.printStackTrace();
-                }
-            }
-        }
-
-        return result;
-    }*/
 
     public void updateFavListChangeToDatabase(String data) {
         saveStringToXml(KEY_SETTINGS_FAVLIST, data);
@@ -1056,6 +1284,31 @@ public class ChannelDataManager {
         return result;
     }
 
+    private String convertJsonObjectListToJsonStr(final List<String> list) {
+        String result = null;
+        //sort as ascend order
+        Collections.sort(list, new AscendComparator());
+        Iterator<String> iterator = list.iterator();
+        JSONArray array = new JSONArray();
+        String item = null;
+        JSONObject obj = null;
+        while (iterator.hasNext()) {
+            item = (String)iterator.next();
+            try {
+                obj = new JSONObject(item);
+            } catch (JSONException e) {
+                Log.d(TAG, "convertJsonObjectListToJsonStr JSONException = " + e);
+                e.printStackTrace();
+                continue;
+            }
+            array.put(obj);
+        }
+        if (array != null && array.length() > 0) {
+            result = array.toString();
+        }
+        return result;
+    }
+
     /*public boolean putStringToSettings(String name, String value) {
         return Settings.System.putString(mContentResolver, name, value);
     }
@@ -1070,12 +1323,32 @@ public class ChannelDataManager {
         SharedPreferences.Editor editor = userSettings.edit();
         editor.putString(key, String.valueOf(jsonValue));
         editor.commit();
+        if (false) {
+            if (jsonValue != null) {
+                String[] split = jsonValue.split(",");
+                Log.d(TAG, "saveStringToXml key = " + key + "--------");
+                for (String one : split) {
+                    Log.d(TAG, "saveStringToXml one = " + one);
+                }
+                Log.d(TAG, "saveStringToXml key = " + key + "********");
+            }
+        }
     }
 
     public String getStringFromXml(String key, String defValue) {
         String result = null;
         SharedPreferences userSettings = mContext.getSharedPreferences("channel_info", Context.MODE_PRIVATE);
         result = userSettings.getString(key, defValue);
+        if (false) {
+            if (result != null) {
+                String[] split = result.split(",");
+                Log.d(TAG, "getStringFromXml key = " + key + "--------");
+                for (String one : split) {
+                    Log.d(TAG, "getStringFromXml one = " + one);
+                }
+                Log.d(TAG, "getStringFromXml key = " + key + "********");
+            }
+        }
         return result;
     }
 
@@ -1231,6 +1504,33 @@ public class ChannelDataManager {
         @Override
         public int compare(Item me1, Item me2) {
             return me2.getOriginTitle().compareTo(me1.getOriginTitle());
+        }
+    }
+
+    public class AscendComparator implements Comparator<String> {
+        @Override
+        public int compare(String me1, String me2) {
+            return me1.compareTo(me2);
+        }
+    }
+
+    public class FavItemAscendComparator implements Comparator<String> {
+        @Override
+        public int compare(String me1, String me2) {
+            int result = 0;
+            try {
+                JSONObject ojb1 = new JSONObject(me1);
+                JSONObject ojb2 = new JSONObject(me2);
+                String title1 = ojb1.getString(KEY_SETTINGS_FAV_NAME);
+                String title2 = ojb2.getString(KEY_SETTINGS_FAV_NAME);
+                if (!TextUtils.isEmpty(title1) && !TextUtils.isEmpty(title2)) {
+                    result = title1.compareTo(title2);
+                }
+            } catch (JSONException e) {
+                Log.d(TAG, "FavItemAscendComparator JSONException = " + e);
+                e.printStackTrace();
+            }
+            return result;
         }
     }
 }

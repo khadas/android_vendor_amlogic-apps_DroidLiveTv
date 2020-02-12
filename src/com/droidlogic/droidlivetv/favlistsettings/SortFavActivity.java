@@ -63,6 +63,8 @@ public class SortFavActivity extends Activity {
     private String mInputId = null;
 
     private static final int CONNECT = 0;
+    private static final int UPDATE_FAV_GROUP = 1;
+
     private Handler mHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -70,6 +72,9 @@ public class SortFavActivity extends Activity {
             switch (msg.what) {
                 case CONNECT:
                     bindInterationService();
+                    break;
+                case UPDATE_FAV_GROUP:
+                    dealFavGroupChange((Bundle)msg.obj);
                     break;
                 default:
                     break;
@@ -260,6 +265,7 @@ public class SortFavActivity extends Activity {
                 }
                 break;
             case ACTION_FUNVTION_ADD_FAV:
+                mFavListView.setListType(CustomedListView.SORT_FAV_LIST);
                 mRightTitle.setText(R.string.f2_add_fav);
                 if (mAllListView.getVisibility() == View.VISIBLE && !mAllListView.hasFocus() && mAllListView.getAdapter() != null && mAllListView.getAdapter().getCount() > 0) {
                     //Log.d(TAG, "dealAction --- " + mAllListView.getSelectedView() + ", position = " + mAllListView.getPositionForView(mAllListView.getSelectedView()));
@@ -294,6 +300,7 @@ public class SortFavActivity extends Activity {
                 dealActionUI(action);
                 break;
             case ACTION_FUNVTION_FAVLIST:
+                mFavListView.setListType(CustomedListView.SORT_EDIT_ALL_FAV_LIST);
                 mRightTitle.setText(R.string.favourite_list);
                 if (LIST_CHANNEL_FAV_LIST.equals(mCurrentFavlList)) {
                     if (mRightShowContainner.getVisibility() != View.VISIBLE) {
@@ -475,7 +482,7 @@ public class SortFavActivity extends Activity {
                 break;
             }
             case ACTION_FUNVTION_FAVLIST: {
-                mFavListView.updateAllItem(this, mChannelDataManager.getFavListItem());
+                mFavListView.updateAllItem(this, /*mChannelDataManager.getFavListItem()*/mChannelDataManager.getEditFavListItem());
                 mFavListView.requestFocus();
                 mFavListView.setSelection(0);
                 break;
@@ -641,13 +648,17 @@ public class SortFavActivity extends Activity {
     private long mCurrentEditChannelId =  -1;
     private int mCurrentEditChannelIndex =  -1;
     private String mCurrentFavlList =  LIST_ALL_FAV_LIST;//all or channel fav
-    private int mCurrentFavId =  -1;
+    //private int mCurrentFavId = -1;
+    private String mCurrentFavName = null;
     private int mCurrentFavIndex =  -1;
     private int mCurrentActionId =  ACTION_CHANNEL_SORT_ALL;
 
     private AdapterView.OnItemSelectedListener mOnItemSelectedListener = new AdapterView.OnItemSelectedListener() {
         @Override
         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+            if (DEBUG) {
+                LOG(LOGD, null, "onItemSelected view = " + view + ", position = " + position);
+            }
             if (parent != null) {
                 int parentRes = parent.getId();
                 switch (parentRes) {
@@ -675,18 +686,21 @@ public class SortFavActivity extends Activity {
                         if (item != null) {
                             if (LIST_ALL_FAV_LIST.equals(item.getFavListType())) {
                                 mCurrentFavlList = LIST_ALL_FAV_LIST;
-                                mCurrentFavId = item.getFavId();
+                                //mCurrentFavId = item.getFavId();
+                                mCurrentFavName = item.getTitle();
                                 mCurrentFavIndex = position;
                             } else if (LIST_CHANNEL_FAV_LIST.equals(item.getFavListType())){
                                 mCurrentFavlList = LIST_CHANNEL_FAV_LIST;
-                                mCurrentFavId = item.getFavId();
+                                //mCurrentFavId = item.getFavId();
+                                mCurrentFavName = item.getTitle();
                                 mCurrentFavIndex = position;
                             } else if (LIST_EDIT_ALL_FAV_LIST.equals(item.getFavListType())) {
                                 mCurrentFavlList = LIST_EDIT_ALL_FAV_LIST;
-                                mCurrentFavId = item.getFavId();
+                                //mCurrentFavId = item.getFavId();
+                                mCurrentFavName = item.getTitle();
                                 mCurrentFavIndex = position;
                             }
-                            LOG(LOGD, null, "onItemSelected favourite mCurrentFavlList = " + mCurrentFavlList + ", mCurrentFavId = " + mCurrentFavId + ", mCurrentFavIndex = " + mCurrentFavIndex);
+                            LOG(LOGD, null, "onItemSelected favourite mCurrentFavlList = " + mCurrentFavlList + ", mCurrentFavName = " + mCurrentFavName + ", mCurrentFavIndex = " + mCurrentFavIndex);
                         }
                         break;
                     default:
@@ -707,6 +721,9 @@ public class SortFavActivity extends Activity {
     private AdapterView.OnItemClickListener mOnItemClickListener = new AdapterView.OnItemClickListener() {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            if (DEBUG) {
+                LOG(LOGD, null, "onItemClick view = " + view + ", position = " + position);
+            }
             if (parent != null) {
                 int parentRes = parent.getId();
                 switch (parentRes) {
@@ -732,18 +749,21 @@ public class SortFavActivity extends Activity {
                         if (favItem != null) {
                             if (LIST_ALL_FAV_LIST.equals(favItem.getFavListType())) {
                                 mCurrentFavlList = LIST_ALL_FAV_LIST;
-                                mCurrentFavId = favItem.getFavId();
+                                //mCurrentFavId = favItem.getFavId();
+                                mCurrentFavName = favItem.getTitle();
                                 mCurrentFavIndex = position;
                             } else if (LIST_CHANNEL_FAV_LIST.equals(favItem.getFavListType())){
                                 mCurrentFavlList = LIST_CHANNEL_FAV_LIST;
-                                mCurrentFavId = favItem.getFavId();
+                                //mCurrentFavId = favItem.getFavId();
+                                mCurrentFavName = favItem.getTitle();
                                 mCurrentFavIndex = position;
                             } else if (LIST_EDIT_ALL_FAV_LIST.equals(favItem.getFavListType())) {
                                 mCurrentFavlList = LIST_EDIT_ALL_FAV_LIST;
-                                mCurrentFavId = favItem.getFavId();
+                                //mCurrentFavId = favItem.getFavId();
+                                mCurrentFavName = favItem.getTitle();
                                 mCurrentFavIndex = position;
                             }
-                            LOG(LOGD, null, "OnItemClickListener favourite mCurrentFavlList = " + mCurrentFavlList + ", mCurrentFavId = " + mCurrentFavId + ", mCurrentFavIndex = " + mCurrentFavIndex);
+                            LOG(LOGD, null, "OnItemClickListener favourite mCurrentFavlList = " + mCurrentFavlList + ", mCurrentFavName = " + mCurrentFavName + ", mCurrentFavIndex = " + mCurrentFavIndex);
                         }
                         updateChannelFavInfo(parent, parentRes, position);
                         break;
@@ -759,7 +779,10 @@ public class SortFavActivity extends Activity {
 
     private CustomedListView.KeyEventListener mKeyEventListener = new CustomedListView.KeyEventListener() {
         @Override
-        public void onKeyEventCallbak(Bundle data) {
+        public void onKeyEventCallbak(Item item, Bundle data) {
+            if (DEBUG) {
+                LOG(LOGD, null, "onKeyEventCallbak item = " + item + ", data = " + data);
+            }
             if (data != null) {
                 String listType = data.getString(CustomedListView.KEY_LIST_TYPE);
                 switch (listType) {
@@ -793,6 +816,7 @@ public class SortFavActivity extends Activity {
                         }
                         break;
                     case CustomedListView.SORT_FAV_LIST:
+                    case CustomedListView.SORT_EDIT_ALL_FAV_LIST:
                         if (KeyEvent.KEYCODE_DPAD_LEFT == data.getInt(CustomedListView.KEY_ACTION_CODE)) {
                             if (mAllListView.getVisibility() == View.VISIBLE && mAllListView.getAdapter() != null && mAllListView.getAdapter().getCount() > 0) {
                                 mAllListView.requestFocus();
@@ -802,7 +826,25 @@ public class SortFavActivity extends Activity {
                                 mSortListView.requestFocus();
                             }
                         } else if (KeyEvent.KEYCODE_DPAD_RIGHT == data.getInt(CustomedListView.KEY_ACTION_CODE)) {
-
+                            if (TextUtils.equals(listType, CustomedListView.SORT_EDIT_ALL_FAV_LIST) && item !=  null && item instanceof FavListItem) {
+                                if (mRightShowContainner.getVisibility() == View.VISIBLE) {
+                                    //display current page
+                                    if (mCurrentFavName != null) {
+                                        if (mSortListView.getVisibility() == View.VISIBLE) {
+                                            mSortListView.setVisibility(View.GONE);
+                                        }
+                                        if (mContentListView.getVisibility() == View.VISIBLE) {
+                                            mContentListView.setVisibility(View.GONE);
+                                        }
+                                        if (mAllListView.getVisibility() != View.VISIBLE) {
+                                            mAllListView.setVisibility(View.VISIBLE);
+                                        }
+                                        mLeftTitle.setText(mCurrentFavName);
+                                        mAllListView.updateAllItem(SortFavActivity.this, mChannelDataManager.getChannelItemByFavPage(mCurrentFavName));
+                                    }
+                                    mCustomedDialogView.creatEditFavDialog((FavListItem)item).show();
+                                }
+                            }
                         }
                         break;
                     default:
@@ -912,6 +954,9 @@ public class SortFavActivity extends Activity {
     private CustomedDialogView.DialogCallback mDialogCallback = new CustomedDialogView.DialogCallback() {
         @Override
         public void onDialogEvent(Bundle bundle) {
+            if (DEBUG) {
+                LOG(LOGD, null, "onDialogEvent bundle = " + bundle);
+            }
             if (bundle != null) {
                 if (bundle.getBoolean(CustomedDialogView.DIALOG_ACTION)) {
                     if (CustomedDialogView.DIALOG_ACTION_SORT_LIST_CLICKED.equals(bundle.getString(CustomedDialogView.DIALOG_EVENT))) {
@@ -955,6 +1000,10 @@ public class SortFavActivity extends Activity {
                             mAllListView.updateAllItem(SortFavActivity.this, mChannelDataManager.getMatchedSortChannelListItemByName(mInputId, matchKey));
                             mAllListView.setSelection(0);
                         }
+                    } else if (CustomedDialogView.DIALOG_ACTION_EDIT_FAV_OK_CLICKED.equals(bundle.getString(CustomedDialogView.DIALOG_EVENT))) {
+                        if (mFavListView.getVisibility() == View.VISIBLE) {
+                            mHandler.sendMessage(mHandler.obtainMessage(UPDATE_FAV_GROUP, bundle));
+                        }
                     }
                 }
             }
@@ -968,25 +1017,30 @@ public class SortFavActivity extends Activity {
             ItemAdapter favAdapter = null;
             String favType = null;
             boolean isSelectedFav = false;
-            int favId = -1;
+            //int favId = -1;
+            String favTitle = null;
             favItem = (FavListItem)parent.getItemAtPosition(position);
             LinkedList<Item> data =  ((ItemAdapter)parent.getAdapter()).getAllData();
             if (favItem != null) {
                 favType = favItem.getFavListType();
-                favId = favItem.getFavId();
+                //favId = favItem.getFavId();
+                favTitle = favItem.getTitle();
                 isSelectedFav = favItem.isNeedShowIcon();
-                LOG(LOGD, null, "updateChannelFavInfo favType = " + favType + ", favId = " + favId + ", isSelectedFav = " + isSelectedFav);
+                LOG(LOGD, null, "updateChannelFavInfo favType = " + favType + ", favTitle = " + favTitle + ", isSelectedFav = " + isSelectedFav);
                 if (LIST_ALL_FAV_LIST.equals(favItem.getFavListType())) {
                     mCurrentFavlList = LIST_ALL_FAV_LIST;
-                    mCurrentFavId = favItem.getFavId();
+                    //mCurrentFavId = favItem.getFavId();
+                    mCurrentFavName = favItem.getTitle();
                     mCurrentFavIndex = position;
                 } else if (LIST_CHANNEL_FAV_LIST.equals(favItem.getFavListType())){
                     mCurrentFavlList = LIST_CHANNEL_FAV_LIST;
-                    mCurrentFavId = favItem.getFavId();
+                    //mCurrentFavId = favItem.getFavId();
+                    mCurrentFavName = favItem.getTitle();
                     mCurrentFavIndex = position;
                 } else if (LIST_EDIT_ALL_FAV_LIST.equals(favItem.getFavListType())) {
                     mCurrentFavlList = LIST_EDIT_ALL_FAV_LIST;
-                    mCurrentFavId = favItem.getFavId();
+                    //mCurrentFavId = favItem.getFavId();
+                    mCurrentFavName = favItem.getTitle();
                     mCurrentFavIndex = position;
                 }
                 if (LIST_CHANNEL_FAV_LIST.equals(favType)) {
@@ -996,7 +1050,7 @@ public class SortFavActivity extends Activity {
                     if (TextUtils.equals(mCurrentEditChannelList, LIST_ALL_CHANNEL)) {
                         ItemAdapter adapter = (ItemAdapter)(mAllListView.getAdapter());
                         ChannelListItem channelItem = (ChannelListItem)(adapter.getItem(mCurrentEditChannelIndex));
-                        channelItem.getUpdateFavAllIndexArrayString(isSelectedFav, favId);
+                        channelItem.getUpdateFavAllIndexArrayString(isSelectedFav, favTitle);
                         mAllListView.updateItem(mCurrentEditChannelIndex, channelItem);
                         //adapter = (ItemAdapter)(mAllListView.getAdapter());
                         //String updateChannel = mChannelDataManager.genarateUpdatedChannelListJsonSrt(mChannelDataManager.getChannelList(mInputId), channelItem.getChannelId(), channelItem.getFavArrayJsonStr());
@@ -1005,13 +1059,14 @@ public class SortFavActivity extends Activity {
                     } else if (TextUtils.equals(mCurrentEditChannelList, LIST_SORT_CONTENT)) {
                         ItemAdapter adapter = (ItemAdapter)(mContentListView.getAdapter());
                         ChannelListItem channelItem = (ChannelListItem)(adapter.getItem(mCurrentEditChannelIndex));
-                        channelItem.getUpdateFavAllIndexArrayString(isSelectedFav, favId);
+                        channelItem.getUpdateFavAllIndexArrayString(isSelectedFav, favTitle);
                         mContentListView.updateItem(mCurrentEditChannelIndex, channelItem);
                         //String updateChannel = mChannelDataManager.genarateUpdatedChannelListJsonSrt(mChannelDataManager.getChannelList(mInputId), channelItem.getChannelId(), channelItem.getFavArrayJsonStr());
                         //mChannelDataManager.updateChannelListChangeToDatabase(updateChannel);
                         mChannelDataManager.updateChannelFavChangeToTvProvider(channelItem.getChannelId(), channelItem.getFavArrayJsonStr());
                     }
-                } else if (LIST_ALL_FAV_LIST.equals(favType)) {
+                } else if (LIST_ALL_FAV_LIST.equals(favType) ||
+                        LIST_EDIT_ALL_FAV_LIST.equals(favType)) {
                     if (mSortListView.getVisibility() == View.VISIBLE) {
                         mSortListView.setVisibility(View.GONE);
                     }
@@ -1022,10 +1077,10 @@ public class SortFavActivity extends Activity {
                         mAllListView.setVisibility(View.VISIBLE);
                     }
                     mLeftTitle.setText(favItem.getTitle());
-                    mAllListView.updateAllItem(this, mChannelDataManager.getChannelItemByFavPage(favItem.getFavId()));
-                } else if (LIST_EDIT_ALL_FAV_LIST.equals(favType)) {
+                    mAllListView.updateAllItem(this, mChannelDataManager.getChannelItemByFavPage(favItem.getTitle()));
+                }/* else if (LIST_EDIT_ALL_FAV_LIST.equals(favType)) {
                     mCustomedDialogView.creatEditFavDialog(favItem).show();
-                }
+                }*/
             }
         }
     }
@@ -1187,6 +1242,50 @@ public class SortFavActivity extends Activity {
         Intent intent = new Intent(DroidLogicTvUtils.ACTION_SWITCH_CHANNEL);
         intent.putExtra(DroidLogicTvUtils.EXTRA_CHANNEL_ID, channelId);
         sendBroadcast(intent);
+    }
+
+    private void dealFavGroupChange(Bundle bundle) {
+        int actionFlag = bundle.getInt(CustomedDialogView.DIALOG_ACTION_FLAG);
+        String previousName = bundle.getString(CustomedDialogView.DIALOG_ACTION_FAV_PREVIOUS_VALUE);
+        String newName = bundle.getString(CustomedDialogView.DIALOG_ACTION_FAV_EDIT_VALUE);
+        ItemAdapter adapter = (ItemAdapter)mContentListView.getAdapter();
+        String newFavDisplay = null;
+        int position = 0;
+        switch (actionFlag) {
+            case CustomedDialogView.FLAG_EDIT_FAV_ADD:
+                mChannelDataManager.addFavGroup(newName);
+                newFavDisplay = newName;
+                position = mChannelDataManager.getFavGroupPageIndex(newFavDisplay);
+                break;
+            case CustomedDialogView.FLAG_EDIT_FAV_DEL:
+                mChannelDataManager.removeFavGroup(previousName);
+                position = mChannelDataManager.getFavGroupPageIndex(previousName);
+                if (position > 0) {
+                    position = position - 1;
+                }
+                break;
+            case CustomedDialogView.FLAG_EDIT_FAV_EDIT:
+                mChannelDataManager.renameFavGroup(previousName, newName);
+                newFavDisplay = newName;
+                position = mChannelDataManager.getFavGroupPageIndex(newFavDisplay);
+                break;
+            default:
+                break;
+        }
+        if (position < 0) {
+            position = 0;
+        }
+        if (actionFlag >= CustomedDialogView.FLAG_EDIT_FAV_ADD && actionFlag <=CustomedDialogView.FLAG_EDIT_FAV_EDIT) {
+            mFavListView.updateAllItem(this, mChannelDataManager.getEditFavListItem());
+            mFavListView.requestFocus();
+            mFavListView.setSelection(position);
+        }
+        if (newFavDisplay != null) {
+            mLeftTitle.setText(newFavDisplay);
+        } else {
+            mLeftTitle.setText("");
+            mAllListView.updateAllItem(SortFavActivity.this, new LinkedList<Item>());
+        }
     }
 
     //add for service connect demo

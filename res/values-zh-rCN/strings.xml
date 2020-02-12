@@ -105,6 +105,8 @@
     <string name="edit_fav_list_del_description">删除喜爱页 \"%1$2s\"</string>
     <string name="edit_fav_list_edit_description">编辑喜爱页 \"%1$2s\"</string>
     <string name="edit_fav_list_name_invalid">请输入完整的名字!</string>
+    <string name="edit_fav_list_name_exist">改名称已经存在!</string>
+    <string name="edit_fav_list_name_limit">喜爱页面数不能超过64!</string>
     <string name="service_type_tv">电视</string>
     <string name="service_type_radio">广播</string>
     <string name="service_type_other">其他</string>

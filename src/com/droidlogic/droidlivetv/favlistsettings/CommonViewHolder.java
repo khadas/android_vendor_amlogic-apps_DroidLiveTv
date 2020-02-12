@@ -55,7 +55,7 @@ public class CommonViewHolder {
                 if (draw != null) {
                     //textView.setText("icon");
                     //textView.setCompoundDrawables(draw, null, null, null);
-                    textView.setCompoundDrawablesWithIntrinsicBounds(draw, null, null, null);
+                    textView.setCompoundDrawablesWithIntrinsicBounds(null, null, draw, null);
                 } else {
                     //textView.setText("null");
                     textView.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null);

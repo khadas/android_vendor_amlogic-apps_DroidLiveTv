@@ -13,9 +13,12 @@ public abstract class CustomedListView extends ListView {
     public static final String SORT_KEY_CONTENT_LIST = "sort_key_content_list";
     public static final String SORT_ALL_LIST = "sort_all_list";
     public static final String SORT_FAV_LIST = "sort_fav_list";
+    public static final String SORT_EDIT_ALL_FAV_LIST = "edit_fav_list";
 
     public static final String KEY_ACTION_CODE = "action_keycode";
     public static final String KEY_LIST_TYPE = "listview_type";
+    public static final String KEY_ITEM_TITLE = "listview_item_title";
+    public static final String KEY_ITEM_POSITION = "listview_item_position";
 
     private String mName;
 
@@ -29,6 +32,6 @@ public abstract class CustomedListView extends ListView {
     }
 
     public interface KeyEventListener {
-        void onKeyEventCallbak(Bundle data);
+        void onKeyEventCallbak(Item item, Bundle data);
     }
 }

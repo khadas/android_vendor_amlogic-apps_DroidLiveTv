@@ -112,6 +112,8 @@
     <string name="edit_fav_list_del_description">Delete fav page \"%1$2s\"</string>
     <string name="edit_fav_list_edit_description">Edit fav page \"%1$2s\"</string>
     <string name="edit_fav_list_name_invalid">please type in complete name !</string>
+    <string name="edit_fav_list_name_exist">fav name exists already!</string>
+    <string name="edit_fav_list_name_limit">fav page is limit below 64!</string>
     <string name="service_type_tv">Tv</string>
     <string name="service_type_radio">Radio</string>
     <string name="service_type_other">Other</string>

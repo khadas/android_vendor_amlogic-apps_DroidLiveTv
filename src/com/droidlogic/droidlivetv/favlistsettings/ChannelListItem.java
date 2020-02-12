@@ -138,15 +138,15 @@ public class ChannelListItem extends Item {
         return result;
     }
 
-    public List<Integer> getFavAllIndex() {
-        List<Integer> result = new ArrayList<Integer>();
+    public List<String> getFavAllIndex() {
+        List<String> result = new ArrayList<String>();
         try {
             if (mJSONObject != null && mJSONObject.length() > 0) {
                 String arrayString = mJSONObject.getString(ChannelDataManager.KEY_SETTINGS_CHANNEL_FAV_INDEX);
                 JSONArray array = new JSONArray(arrayString);
                 if (array != null && array.length() > 0) {
                     for (int i = 0; i < array.length(); i++) {
-                        result.add(array.getInt(i));
+                        result.add(array.getString(i));
                     }
                 }
             }
@@ -157,26 +157,26 @@ public class ChannelListItem extends Item {
         return result;
     }
 
-    public String getUpdateFavAllIndexArrayString(boolean isSelected,int favId) {
+    public String getUpdateFavAllIndexArrayString(boolean isSelected, String favTitle) {
         String result = null;
         JSONArray array = new JSONArray();
-        List<Integer> list = getFavAllIndex();
+        List<String> list = getFavAllIndex();
         boolean hasDealt = false;
         if (list != null && list.size() > 0) {
-            Iterator<Integer> iterator = list.iterator();
+            Iterator<String> iterator = list.iterator();
             while (iterator.hasNext()) {
-                int id = (Integer)iterator.next();
-                if (favId == id) {
+                String title = (String)iterator.next();
+                if (TextUtils.equals(favTitle, title)) {
                     if (!isSelected) {
                         continue;
                     }
                     hasDealt = true;
                 }
-                array.put(id);
+                array.put(title);
             }
         }
         if (!hasDealt && isSelected) {
-            array.put(favId);
+            array.put(favTitle);
         }
         if (array != null && array.length() > 0) {
             mNeedShowIcon = true;
